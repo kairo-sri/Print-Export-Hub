@@ -9,16 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as _rootSpaRouteImport } from './routes/__root.spa'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LeadzzRouteImport } from './routes/leadzz'
 import { Route as QuotesRouteImport } from './routes/quotes'
 
-const _rootSpaRoute = _rootSpaRouteImport.update({
-  id: '/__root/spa',
-  path: '/spa',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -39,45 +33,34 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/spa': typeof _rootSpaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/spa': typeof _rootSpaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/__root/spa': typeof _rootSpaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/leadzz' | '/quotes' | '/spa'
+  fullPaths: '/' | '/leadzz' | '/quotes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/leadzz' | '/quotes' | '/spa'
-  id: '__root__' | '/' | '/leadzz' | '/quotes' | '/__root/spa'
+  to: '/' | '/leadzz' | '/quotes'
+  id: '__root__' | '/' | '/leadzz' | '/quotes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LeadzzRoute: typeof LeadzzRoute
   QuotesRoute: typeof QuotesRoute
-  _rootSpaRoute: typeof _rootSpaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/__root/spa': {
-      id: '/__root/spa'
-      path: '/spa'
-      fullPath: '/spa'
-      preLoaderRoute: typeof _rootSpaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -106,7 +89,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LeadzzRoute: LeadzzRoute,
   QuotesRoute: QuotesRoute,
-  _rootSpaRoute: _rootSpaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
