@@ -411,7 +411,7 @@ export function PrintExportPanel({
                     </Select>
                   </div>
 
-                  {listPrintCategory !== "Mail Merge Template" && listPrintTemplate && (
+                  {listPrintCategory !== "Mail Merge Template" && listPrintCategory !== "Email Templates" && listPrintTemplate && (
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <FieldLabel>View as</FieldLabel>
