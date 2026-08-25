@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { PrintExportPanel } from "./print-export-panel";
 import type { Mode } from "./print-export-panel";
+import { Link } from "@tanstack/react-router";
 
 type Lead = {
   id: string;
@@ -326,7 +327,11 @@ export function LeadzzView() {
                           onCheckedChange={() => toggle(lead.id)}
                         />
                       </td>
-                      <td className="px-4 py-3">{lead.first}</td>
+                      <td className="px-4 py-3">
+                        <Link to="/lead-detail" className="text-crm-accent hover:underline">
+                          {lead.first}
+                        </Link>
+                      </td>
                       <td className="px-4 py-3">{lead.last}</td>
                       <td className="px-4 py-3">{lead.company}</td>
                       <td className="px-4 py-3">{lead.revenue}</td>

@@ -88,6 +88,8 @@ export function PrintExportPanel({
   listViewExport,
   listExportCategoryOverride,
   printViewCategoryOverride,
+  printCategoryOverride,
+  exportCategoryOverride,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -97,6 +99,8 @@ export function PrintExportPanel({
   listViewExport?: boolean;
   listExportCategoryOverride?: string[];
   printViewCategoryOverride?: string[];
+  printCategoryOverride?: string[];
+  exportCategoryOverride?: string[];
 }) {
   const [category, setCategory] = useState(initialCategory ?? "");
   const [template, setTemplate] = useState("");
@@ -156,27 +160,44 @@ export function PrintExportPanel({
   const isExportCanvas = mode === "export" && category === "Canvas Template";
   const isMailMerge = mode === "print" && category === "Mail Merge Template";
   const isInventory = mode === "print" && category === "Inventory Templates";
+  const isDefaultPrint = mode === "print" && category === "Default Print";
+  const isPrintEmailTemplate = mode === "print" && category === "Email Template";
   const isPrintListView = mode === "print" && printCategory === "List View";
-  const categoryOptions = mode === "print" ? printCategories : exportCategories;
+  const categoryOptions =
+    mode === "print"
+      ? (printCategoryOverride ?? printCategories)
+      : (exportCategoryOverride ?? exportCategories);
   const secondLabel = isCanvas
     ? "Choose Paper format"
     : isMailMerge
       ? "Choose a Mail Merge Template :"
-      : "Choose an Inventory Template";
-  const secondOptions = isCanvas ? paperFormats : isMailMerge ? mailMergeTemplates : inventoryTemplates;
+      : isPrintEmailTemplate
+        ? "Choose an Email Template"
+        : "Choose an Inventory Template";
+  const secondOptions = isCanvas
+    ? paperFormats
+    : isMailMerge
+      ? mailMergeTemplates
+      : isPrintEmailTemplate
+        ? emailTemplates
+        : inventoryTemplates;
 
   const exportTemplateOptions =
     category === "Mail Merge Template"
       ? mailMergeTemplates
       : category === "Canvas Template"
         ? canvasPrintViewTemplates
-        : inventoryTemplates;
+        : category === "Email Template"
+          ? emailTemplates
+          : inventoryTemplates;
   const exportTemplateLabel =
     category === "Mail Merge Template"
       ? "Choose a Mail Merge Template"
       : category === "Canvas Template"
         ? "Choose Print view Templates"
-        : "Choose an Inventory Template";
+        : category === "Email Template"
+          ? "Choose an Email Template"
+          : "Choose an Inventory Template";
   // List-view export: category drives whether a paper format is picked first
   const listExportNeedsFormat =
     !!listViewExport && category === "Canvas Template";
@@ -910,16 +931,17 @@ export function PrintExportPanel({
                   Choose the template to preview
                 </p>
               )
+            ) : isDefaultPrint ? (
+              <LeadDocument name="Stepen" />
             ) : template ? (
-              listViewExport && category === "Email Template" ? (
+              (listViewExport && category === "Email Template") || isPrintEmailTemplate ? (
                 <EmailDocument templateName={template} />
               ) : (
                 <QuoteDocument />
               )
-
             ) : (
               <p className="grid h-full place-items-center text-sm text-muted-foreground">
-                Choose the template to Export
+                Choose the template to preview
               </p>
             )}
           </div>
@@ -1092,25 +1114,27 @@ export function PrintExportPanel({
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <FieldLabel>{secondLabel}</FieldLabel>
-                  <Select value={template} onValueChange={handleSecondChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Templates" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {secondOptions.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!isDefaultPrint && (
+                  <div className="space-y-2">
+                    <FieldLabel>{secondLabel}</FieldLabel>
+                    <Select value={template} onValueChange={handleSecondChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Templates" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {secondOptions.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </>
             )}
 
-            {isInventory && template && (
+            {((isInventory && template) || isDefaultPrint) && (
               <div className="space-y-6">
                 <div className="space-y-2">
                   <FieldLabel>View as</FieldLabel>
@@ -1164,7 +1188,7 @@ export function PrintExportPanel({
               </div>
             )}
 
-            {(isInventory || isMailMerge) && template && (
+            {((isInventory || isMailMerge) && template || isDefaultPrint) && (
               <div className="space-y-3 rounded-lg border border-crm-line bg-crm-canvas p-4">
                 <p className="text-sm leading-relaxed">
                   <span className="font-semibold">Info:</span> If you notice any misalignment,{" "}
