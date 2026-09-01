@@ -411,7 +411,7 @@ export function PrintExportPanel({
                     </Select>
                   </div>
 
-                  {listPrintCategory !== "Mail Merge Template" && listPrintCategory !== "Email Templates" && listPrintTemplate && (
+                  {listPrintCategory !== "Mail Merge Template" && listPrintTemplate && (
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <FieldLabel>View as</FieldLabel>
@@ -461,7 +461,7 @@ export function PrintExportPanel({
                     </div>
                   )}
 
-                  {listPrintCategory !== "Email Templates" && listPrintTemplate && (
+                  {listPrintTemplate && (
                     <div className="space-y-3 rounded-lg border border-crm-line bg-crm-canvas p-4">
                       <p className="text-sm leading-relaxed">
                         <span className="font-semibold">Info:</span> If you notice any misalignment,{" "}
