@@ -846,7 +846,7 @@ export function PrintExportPanel({
       >
         <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
           <SheetTitle className="text-xl">{title}</SheetTitle>
-          {mode === "export" && (
+          {mode === "export" && exportOptionsVisible && (
             <div className="relative">
               <button
                 type="button"
@@ -1014,26 +1014,6 @@ export function PrintExportPanel({
           </div>
 
           <aside className="w-full shrink-0 space-y-6 overflow-y-auto border-t border-crm-line bg-crm-surface p-6 lg:w-80 lg:border-l lg:border-t-0">
-            {mode === "export" && (
-              <div className="space-y-2">
-                <FieldLabel>Export as</FieldLabel>
-                <RadioGroup
-                  value={downloadMode}
-                  onValueChange={(v) => setDownloadMode(v as "single" | "individual")}
-                  className="flex flex-col gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="single" id="export-single" />
-                    <Label htmlFor="export-single">Single PDF (combined)</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RadioGroupItem value="individual" id="export-individual" />
-                    <Label htmlFor="export-individual">Individual files (as zip)</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
-
             {!canvasRecords && mode === "export" && (
               <div className="space-y-2">
                 <FieldLabel>{listViewExport ? "Choose Category" : "Template Category"}</FieldLabel>
@@ -1098,6 +1078,26 @@ export function PrintExportPanel({
                   </Select>
                 </div>
               )}
+
+            {mode === "export" && exportOptionsVisible && (
+              <div className="space-y-2">
+                <FieldLabel>Export as</FieldLabel>
+                <RadioGroup
+                  value={downloadMode}
+                  onValueChange={(v) => setDownloadMode(v as "single" | "individual")}
+                  className="flex flex-col gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="single" id="export-single" />
+                    <Label htmlFor="export-single">Single PDF (combined)</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="individual" id="export-individual" />
+                    <Label htmlFor="export-individual">Individual files (as zip)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
 
             {isListViewCategory && (
               <div className="space-y-6">
