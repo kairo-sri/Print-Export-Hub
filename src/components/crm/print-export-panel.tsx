@@ -97,6 +97,7 @@ export function PrintExportPanel({
   printViewCategoryOverride,
   printCategoryOverride,
   exportCategoryOverride,
+  singleRecord = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -108,6 +109,7 @@ export function PrintExportPanel({
   printViewCategoryOverride?: string[];
   printCategoryOverride?: string[];
   exportCategoryOverride?: string[];
+  singleRecord?: boolean;
 }) {
   const [category, setCategory] = useState(initialCategory ?? "");
   const [template, setTemplate] = useState("");
@@ -883,7 +885,7 @@ export function PrintExportPanel({
       >
         <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
           <SheetTitle className="text-xl">{title}</SheetTitle>
-          {mode === "export" && exportOptionsVisible && (
+          {mode === "export" && exportOptionsVisible && !singleRecord && (
             <div className="relative" ref={switchToRef}>
               <button
                 type="button"
@@ -1026,8 +1028,8 @@ export function PrintExportPanel({
             )}
           </div>
 
-          {/* Bottom navigation + zoom bar — export mode */}
-          {mode === "export" && exportOptionsVisible && (
+          {/* Bottom navigation + zoom bar — export mode, bulk only */}
+          {mode === "export" && exportOptionsVisible && !singleRecord && (
             <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
               <button
                 type="button"
@@ -1138,7 +1140,7 @@ export function PrintExportPanel({
                 </div>
               )}
 
-            {mode === "export" && exportOptionsVisible && (
+            {mode === "export" && exportOptionsVisible && !singleRecord && (
               <div className="space-y-2">
                 <FieldLabel>Export as</FieldLabel>
                 <RadioGroup

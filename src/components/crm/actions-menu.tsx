@@ -100,7 +100,7 @@ export function ActionsMenu() {
           </DropdownMenuPrimitive.Content>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuPrimitive.Root>
-      <PrintExportPanel open={panelOpen} onOpenChange={setPanelOpen} mode={panelMode} />
+      <PrintExportPanel open={panelOpen} onOpenChange={setPanelOpen} mode={panelMode} singleRecord />
     </>
   );
 }

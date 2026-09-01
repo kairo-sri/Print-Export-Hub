@@ -122,6 +122,7 @@ export function LeadActionsMenu() {
         mode={panelMode}
         printCategoryOverride={leadPrintCategories}
         exportCategoryOverride={leadExportCategories}
+        singleRecord
       />
     </>
   );
