@@ -177,6 +177,7 @@ export function PrintExportPanel({
   const isMailMerge = mode === "print" && category === "Mail Merge Template";
   const isInventory = mode === "print" && category === "Inventory Templates";
   const isDefaultPrint = mode === "print" && category === "Default Print";
+  const isExportDefaultPrint = mode === "export" && category === "Default Print";
   const isPrintEmailTemplate = mode === "print" && category === "Email Template";
   const isPrintListView = mode === "print" && printCategory === "List View";
   const categoryOptions =
@@ -238,9 +239,11 @@ export function PrintExportPanel({
     mode === "export" &&
     (listViewExport
       ? !!category && !!template && (!listExportNeedsFormat || !!format)
-      : category === "Canvas Template"
-        ? !!format && !!template
-        : !!category && !!template);
+      : category === "Default Print"
+        ? true
+        : category === "Canvas Template"
+          ? !!format && !!template
+          : !!category && !!template);
 
   const close = () => onOpenChange(false);
 
@@ -1013,7 +1016,7 @@ export function PrintExportPanel({
                   Choose the template to preview
                 </p>
               )
-            ) : isDefaultPrint ? (
+            ) : isDefaultPrint || isExportDefaultPrint ? (
               <LeadDocument name="Stepen" />
             ) : template ? (
               (listViewExport && category === "Email Template") || isPrintEmailTemplate ? (
@@ -1114,6 +1117,7 @@ export function PrintExportPanel({
             {!canvasRecords &&
               mode === "export" &&
               !isListViewCategory &&
+              !isExportDefaultPrint &&
               (listViewExport
                 ? !!category && (!listExportNeedsFormat || !!format)
                 : isExportCanvas

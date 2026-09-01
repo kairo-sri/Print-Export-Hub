@@ -18,6 +18,7 @@ const leadPrintCategories = [
 
 // Non-inventory (Leads) Export to PDF categories
 const leadExportCategories = [
+  "Default Print",
   "Mail Merge Template",
   "Email Template",
   "Canvas Template",
