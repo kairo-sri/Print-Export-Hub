@@ -139,6 +139,7 @@ export function PrintExportPanel({
   const [downloadMode, setDownloadMode] = useState<"single" | "individual">("individual");
   const [zoom, setZoom] = useState(75);
   const [currentPage, setCurrentPage] = useState(1);
+  const [listPrintPage, setListPrintPage] = useState(1);
   const [switchToOpen, setSwitchToOpen] = useState(false);
   const switchToRef = useRef<HTMLDivElement>(null);
 
@@ -243,6 +244,7 @@ export function PrintExportPanel({
         setPrintCategory("");
         setListPrintCategory("");
         setListPrintTemplate("");
+        setListPrintPage(1);
       }, 250);
     }
   };
@@ -307,6 +309,7 @@ export function PrintExportPanel({
           </header>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+            <div className="relative flex min-h-0 flex-1 flex-col">
             <div className="relative min-h-0 flex-1 overflow-y-auto p-6">
               {listPrintCategory === "" ? (
                 <div className="grid h-full place-items-center text-sm text-muted-foreground">
@@ -316,14 +319,11 @@ export function PrintExportPanel({
                 listPrintCategory === "Mail Merge Template" ||
                 listPrintCategory === "Email Templates" ? (
                 listPrintTemplate ? (
-                  <>
-                    <div className="mx-auto flex max-w-3xl justify-end">
-                      <span className="mb-2 rounded-md bg-crm-surface px-3 py-1 text-sm shadow-sm">
-                        1 / {total} Pages
-                      </span>
-                    </div>
+                  listPrintCategory === "Email Templates" ? (
                     <EmailDocument templateName={listPrintTemplate} />
-                  </>
+                  ) : (
+                    <QuoteDocument />
+                  )
                 ) : (
                   <div className="grid h-full place-items-center text-sm text-muted-foreground">
                     Choose the template to preview
@@ -331,36 +331,50 @@ export function PrintExportPanel({
                 )
               ) : listPrintCategory === "Canvas View" ? (
                 printViewTemplate ? (
-                  <>
-                    <div className="mx-auto flex max-w-3xl justify-end">
-                      <span className="mb-2 rounded-md bg-crm-surface px-3 py-1 text-sm shadow-sm">
-                        1 / {total} Pages
-                      </span>
-                    </div>
-                    <ServiceReportDocument />
-                  </>
+                  <ServiceReportDocument />
                 ) : (
                   <div className="grid h-full place-items-center text-sm text-muted-foreground">
                     Choose the template to preview
                   </div>
                 )
               ) : (
-                <>
-                  <div className="mx-auto flex max-w-4xl justify-end">
-                    <span className="mb-2 rounded-md bg-crm-surface px-3 py-1 text-sm shadow-sm">
-                      1 / 18 Pages
-                    </span>
-                  </div>
-                  <LeadsTableDocument
-                    viewName={headerViewName}
-                    currentDate={headerDate}
-                    rowNumber={rowNumber}
-                    gridLines={gridLines}
-                    fontSize={fontSize}
-                    pageNumber={footerPageNumber}
-                  />
-                </>
+                <LeadsTableDocument
+                  viewName={headerViewName}
+                  currentDate={headerDate}
+                  rowNumber={rowNumber}
+                  gridLines={gridLines}
+                  fontSize={fontSize}
+                  pageNumber={footerPageNumber}
+                />
               )}
+            </div>
+
+            {/* Bottom record navigation — shown when a template is selected */}
+            {listPrintTemplate && listPrintCategory !== "" && (
+              <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
+                <button
+                  type="button"
+                  aria-label="Previous record"
+                  onClick={() => setListPrintPage((p) => Math.max(1, p - 1))}
+                  disabled={listPrintPage <= 1}
+                  className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
+                >
+                  <ChevronUp className="size-4" />
+                </button>
+                <span className="min-w-[60px] text-center text-sm">
+                  {listPrintPage} / {total}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next record"
+                  onClick={() => setListPrintPage((p) => Math.min(total, p + 1))}
+                  disabled={listPrintPage >= total}
+                  className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+              </div>
+            )}
             </div>
 
             <aside className="w-full shrink-0 space-y-5 overflow-y-auto border-t border-crm-line bg-crm-surface p-6 lg:w-80 lg:border-l lg:border-t-0">
