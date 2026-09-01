@@ -294,11 +294,6 @@ export function PrintExportPanel({
               Configure print settings for the selected list view records.
             </SheetDescription>
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">1 - 50</span>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <ChevronLeft className="size-5" />
-                <ChevronRight className="size-5" />
-              </div>
               <Button variant="outline" className="rounded-lg" onClick={close}>
                 Cancel
               </Button>
@@ -350,7 +345,7 @@ export function PrintExportPanel({
             </div>
 
             {/* Bottom record navigation — shown when a template is selected */}
-            {listPrintTemplate && listPrintCategory !== "" && (
+            {listPrintCategory !== "" && (listPrintTemplate || (listPrintCategory === "Canvas View" && printViewTemplate)) && (
               <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
                 <button
                   type="button"
