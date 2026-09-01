@@ -59,6 +59,13 @@ const mergeFieldGroups: { module: string; fields: string[] }[] = [
     fields: ["DOB", "EmailID", "Phonenumber"],
   },
 ];
+const canvasMailingTemplates = [
+  "Default Mailing Label",
+  "Compact Address Label",
+  "Wide Format Label",
+  "Return Address Label",
+  "Shipping Label",
+];
 const canvasPrintViewTemplates = [
   "Quote Template 1",
   "Quote Template 2",
@@ -140,6 +147,7 @@ export function PrintExportPanel({
   const [zoom, setZoom] = useState(75);
   const [currentPage, setCurrentPage] = useState(1);
   const [listPrintPage, setListPrintPage] = useState(1);
+  const [canvasMailingTemplate, setCanvasMailingTemplate] = useState("");
   const [switchToOpen, setSwitchToOpen] = useState(false);
   const switchToRef = useRef<HTMLDivElement>(null);
 
@@ -245,6 +253,7 @@ export function PrintExportPanel({
         setListPrintCategory("");
         setListPrintTemplate("");
         setListPrintPage(1);
+        setCanvasMailingTemplate("");
       }, 250);
     }
   };
@@ -804,6 +813,23 @@ export function PrintExportPanel({
                 </>
               ) : (
                 <>
+                  <div className="space-y-2">
+                    <FieldLabel>Choose Print View</FieldLabel>
+                    <Select
+                      value={canvasMailingTemplate}
+                      onValueChange={setCanvasMailingTemplate}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a mailing label" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {canvasMailingTemplates.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <FieldLabel>Print Record in</FieldLabel>
                     <Select value={printRecord} onValueChange={setPrintRecord}>
