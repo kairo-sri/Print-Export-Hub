@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Download, FileDown, Info, Printer, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, FileDown, Info, Printer, Search, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -136,9 +136,11 @@ export function PrintExportPanel({
   const [footerPageNumber, setFooterPageNumber] = useState(true);
   const [listPrintCategory, setListPrintCategory] = useState("");
   const [listPrintTemplate, setListPrintTemplate] = useState("");
-  const [downloadMode, setDownloadMode] = useState<"single" | "individual">("single");
+  const [downloadMode, setDownloadMode] = useState<"single" | "individual">("individual");
   const [zoom, setZoom] = useState(75);
   const [currentPage, setCurrentPage] = useState(1);
+  const [switchToOpen, setSwitchToOpen] = useState(false);
+  const switchToRef = useRef<HTMLDivElement>(null);
 
 
   const handleFormatChange = (value: string) => {
@@ -847,15 +849,37 @@ export function PrintExportPanel({
         <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
           <SheetTitle className="text-xl">{title}</SheetTitle>
           {mode === "export" && exportOptionsVisible && (
-            <div className="relative">
+            <div className="relative" ref={switchToRef}>
               <button
                 type="button"
-                onClick={() => toast(downloadMode === "individual" ? "Jump to record…" : "Jump to page…")}
+                onClick={() => setSwitchToOpen((o) => !o)}
                 className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
               >
-                {downloadMode === "individual" ? "Jump to record" : "Jump to page"}
-                <ChevronDown className="size-3.5" />
+                {downloadMode === "individual" ? "Switch to" : "Jump to"}
+                {switchToOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
               </button>
+              {switchToOpen && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border bg-popover shadow-md">
+                  <div className="flex items-center gap-2 border-b px-3 py-2">
+                    <Search className="size-4 shrink-0 text-muted-foreground" />
+                    <input
+                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      placeholder="Search"
+                      autoFocus
+                    />
+                  </div>
+                  {["Deal Alpha Project", "Q2 Car Sale Jackson", "Premium Package Upgrade", "Deal Sprint May", "Deal Blue Expansion", "Enterprise Contract"].map((record) => (
+                    <button
+                      key={record}
+                      type="button"
+                      className="block w-full px-4 py-2.5 text-left text-sm hover:bg-accent"
+                      onClick={() => { toast(`Navigating to ${record}…`); setSwitchToOpen(false); }}
+                    >
+                      {record}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {mode === "export" && !!recordCount && (
@@ -977,7 +1001,7 @@ export function PrintExportPanel({
                 className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
                 disabled={currentPage <= 1}
               >
-                <ChevronLeft className="size-4" />
+                {downloadMode === "single" ? <ChevronDown className="size-4" /> : <ChevronLeft className="size-4" />}
               </button>
               <span className="min-w-[60px] text-center text-sm">
                 {currentPage} / 45
@@ -989,7 +1013,7 @@ export function PrintExportPanel({
                 className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
                 disabled={currentPage >= 45}
               >
-                <ChevronRight className="size-4" />
+                {downloadMode === "single" ? <ChevronUp className="size-4" /> : <ChevronRight className="size-4" />}
               </button>
               <span className="mx-2 h-4 w-px bg-border" />
               <button
@@ -1088,12 +1112,12 @@ export function PrintExportPanel({
                   className="flex flex-col gap-2"
                 >
                   <div className="flex items-center gap-2">
-                    <RadioGroupItem value="single" id="export-single" />
-                    <Label htmlFor="export-single">Single PDF (combined)</Label>
+                    <RadioGroupItem value="individual" id="export-individual" />
+                    <Label htmlFor="export-individual">Separate file</Label>
                   </div>
                   <div className="flex items-center gap-2">
-                    <RadioGroupItem value="individual" id="export-individual" />
-                    <Label htmlFor="export-individual">Individual files (as zip)</Label>
+                    <RadioGroupItem value="single" id="export-single" />
+                    <Label htmlFor="export-single">Single file (Combined)</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -1379,9 +1403,15 @@ export function PrintExportPanel({
               <div className="space-y-2">
                 <FieldLabel>File Name</FieldLabel>
                 <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
-                <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
-                  Type &quot;#&quot; to insert merge field.
-                </p>
+                {downloadMode === "individual" ? (
+                  <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
+                    Type &quot;#&quot; to insert merge field.
+                  </p>
+                ) : (
+                  <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                    <span className="font-semibold">Note:</span> Merge fields are not supported for &apos;Single File (Combined)&apos;
+                  </p>
+                )}
               </div>
             )}
 
