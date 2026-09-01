@@ -84,6 +84,12 @@ export function QuotesView() {
     setPanelOpen(true);
   };
 
+  const openPrintMailingLabels = () => {
+    setPanelMode("mailing");
+    setPanelListViewExport(false);
+    setPanelOpen(true);
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* View tabs */}
@@ -107,7 +113,7 @@ export function QuotesView() {
             <span className="text-sm"><strong>{selected.length}</strong> Records Selected.</span>
             <button type="button" onClick={() => setSelected([])} className="text-sm font-medium text-crm-accent">Clear</button>
             <Button variant="outline" className="ml-2 rounded-lg" onClick={() => toast("Send Email")}>Send Email</Button>
-            <BulkActionsMenu onExportPDF={openExportPDF} onPrintPreview={openPrintPreview} />
+            <BulkActionsMenu onExportPDF={openExportPDF} onPrintPreview={openPrintPreview} onPrintMailingLabels={openPrintMailingLabels} />
           </>
         ) : (
           <>
@@ -201,7 +207,7 @@ export function QuotesView() {
   );
 }
 
-function BulkActionsMenu({ onExportPDF, onPrintPreview }: { onExportPDF: () => void; onPrintPreview: () => void }) {
+function BulkActionsMenu({ onExportPDF, onPrintPreview, onPrintMailingLabels }: { onExportPDF: () => void; onPrintPreview: () => void; onPrintMailingLabels: () => void }) {
   return (
     <DropdownMenuPrimitive.Root>
       <DropdownMenuPrimitive.Trigger asChild>
@@ -221,6 +227,7 @@ function BulkActionsMenu({ onExportPDF, onPrintPreview }: { onExportPDF: () => v
                   <DropdownMenuPrimitive.SubContent sideOffset={4} className="z-50 w-56 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md">
                     <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onExportPDF}>Export to PDF</DropdownMenuPrimitive.Item>
                     <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintPreview}>Print preview</DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintMailingLabels}>Print Mailing Labels</DropdownMenuPrimitive.Item>
                   </DropdownMenuPrimitive.SubContent>
                 </DropdownMenuPrimitive.Portal>
               </DropdownMenuPrimitive.Sub>
