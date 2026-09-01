@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, FileDown, Info, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Download, FileDown, Info, Printer, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -136,6 +136,9 @@ export function PrintExportPanel({
   const [footerPageNumber, setFooterPageNumber] = useState(true);
   const [listPrintCategory, setListPrintCategory] = useState("");
   const [listPrintTemplate, setListPrintTemplate] = useState("");
+  const [downloadMode, setDownloadMode] = useState<"single" | "individual">("single");
+  const [zoom, setZoom] = useState(75);
+  const [currentPage, setCurrentPage] = useState(1);
 
 
   const handleFormatChange = (value: string) => {
@@ -843,6 +846,23 @@ export function PrintExportPanel({
       >
         <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
           <SheetTitle className="text-xl">{title}</SheetTitle>
+          {mode === "export" && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDownloadMode(downloadMode === "single" ? "individual" : "single")}
+                className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+              >
+                Jump to
+                <ChevronDown className="size-3.5" />
+              </button>
+            </div>
+          )}
+          {mode === "export" && !!recordCount && (
+            <span className="text-sm text-muted-foreground font-medium">
+              {recordCount} Record{recordCount > 1 ? "s" : ""} Selected
+            </span>
+          )}
           {canvasRecords && (
             <span className="text-sm text-muted-foreground">({recordCount} records)</span>
           )}
@@ -871,7 +891,7 @@ export function PrintExportPanel({
               </Button>
             )}
             {mode === "export" && (
-              <Button className="rounded-lg" onClick={() => toast("Downloading PDF…")}>
+              <Button className="rounded-lg" onClick={() => toast(downloadMode === "individual" ? "Downloading individual files…" : "Downloading PDF…")}>
                 <Download className="size-4" />
                 Download
               </Button>
@@ -880,6 +900,7 @@ export function PrintExportPanel({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+          <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1 overflow-y-auto p-6">
             {canvasRecords &&
               (printCategory === "Canvas View" ? !!printViewTemplate : !!listPrintTemplate) && (
@@ -944,6 +965,52 @@ export function PrintExportPanel({
                 Choose the template to preview
               </p>
             )}
+          </div>
+
+          {/* Bottom navigation + zoom bar — export mode */}
+          {mode === "export" && exportOptionsVisible && (
+            <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
+              <button
+                type="button"
+                aria-label="Previous page"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <span className="min-w-[60px] text-center text-sm">
+                {currentPage} / 45
+              </span>
+              <button
+                type="button"
+                aria-label="Next page"
+                onClick={() => setCurrentPage((p) => Math.min(45, p + 1))}
+                className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40"
+                disabled={currentPage >= 45}
+              >
+                <ChevronRight className="size-4" />
+              </button>
+              <span className="mx-2 h-4 w-px bg-border" />
+              <button
+                type="button"
+                aria-label="Zoom out"
+                onClick={() => setZoom((z) => Math.max(25, z - 25))}
+                className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas"
+              >
+                <ZoomOut className="size-4" />
+              </button>
+              <span className="min-w-[40px] text-center text-sm">{zoom}%</span>
+              <button
+                type="button"
+                aria-label="Zoom in"
+                onClick={() => setZoom((z) => Math.min(200, z + 25))}
+                className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas"
+              >
+                <ZoomIn className="size-4" />
+              </button>
+            </div>
+          )}
           </div>
 
           <aside className="w-full shrink-0 space-y-6 overflow-y-auto border-t border-crm-line bg-crm-surface p-6 lg:w-80 lg:border-l lg:border-t-0">
