@@ -1589,19 +1589,8 @@ export function PrintExportPanel({
               </div>
             )}
 
-            {mode === "print" && !canvasRecords && (
-              <div className="space-y-2 pt-2">
-                <div className="flex gap-3">
-                  <Button className="rounded-lg" onClick={() => toast("Printing quote…")}>
-                    <Printer className="size-4" />
-                    Print
-                  </Button>
-                  <Button variant="outline" className="rounded-lg" onClick={close}>
-                    Cancel
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">Monthly usage limit:0/1000</p>
-              </div>
+            {isMailMerge && template && (
+              <p className="text-sm text-muted-foreground">Monthly usage limit:0/1000</p>
             )}
           </aside>
         </div>
