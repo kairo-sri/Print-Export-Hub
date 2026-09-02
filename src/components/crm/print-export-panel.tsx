@@ -401,7 +401,7 @@ export function PrintExportPanel({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(printViewCategoryOverride ?? ["Inventory Templates", "Mail Merge Template", "Email Templates", "Default View", "Canvas View"]).map((c) => (
+                    {(printViewCategoryOverride ?? ["List View", "Inventory Templates", "Mail Merge Template", "Email Templates", "Canvas View"]).map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>

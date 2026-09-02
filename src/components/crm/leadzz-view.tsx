@@ -366,7 +366,7 @@ export function LeadzzView() {
         recordCount={panelRecordCount}
         listViewExport={panelListViewExport}
         listExportCategoryOverride={["Email Template", "Mail Merge Template", "Canvas Template", "List View"]}
-        printViewCategoryOverride={["Default View", "Mail Merge Template", "Email Templates", "Canvas View"]}
+        printViewCategoryOverride={["List View", "Mail Merge Template", "Email Templates", "Canvas View"]}
       />
     </div>
   );
