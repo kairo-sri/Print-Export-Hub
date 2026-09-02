@@ -25,6 +25,7 @@ import { EmailDocument } from "./email-document";
 import { MailingLabelsDocument } from "./mailing-labels-document";
 import { LeadsTableDocument } from "./leads-table-document";
 import { ServiceReportDocument } from "./service-report-document";
+import { CanvasMailingDocument } from "./canvas-mailing-document";
 
 export type Mode = "print" | "export" | "mailing" | "listprint";
 
@@ -755,7 +756,7 @@ export function PrintExportPanel({
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
               {labelCategory === "Canvas mailing labels" ? (
                 canvasMailingTemplate ? (
-                  <ServiceReportDocument />
+                  <CanvasMailingDocument />
                 ) : (
                   <p className="grid h-full place-items-center text-sm text-muted-foreground">
                     Choose a print view to preview
