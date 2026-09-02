@@ -753,10 +753,20 @@ export function PrintExportPanel({
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
-              <MailingLabelsDocument
-                labelHeight={labelHeight}
-                columns={Number(labelColumns)}
-              />
+              {labelCategory === "Canvas mailing labels" ? (
+                canvasMailingTemplate ? (
+                  <ServiceReportDocument />
+                ) : (
+                  <p className="grid h-full place-items-center text-sm text-muted-foreground">
+                    Choose a print view to preview
+                  </p>
+                )
+              ) : (
+                <MailingLabelsDocument
+                  labelHeight={labelHeight}
+                  columns={Number(labelColumns)}
+                />
+              )}
             </div>
 
             <aside className="w-full shrink-0 space-y-6 overflow-y-auto border-t border-crm-line bg-crm-surface p-6 lg:w-80 lg:border-l lg:border-t-0">
