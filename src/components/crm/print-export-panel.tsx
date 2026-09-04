@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, FileDown, Info, Printer, Search, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,9 @@ export function PrintExportPanel({
   const [canvasMailingTemplate, setCanvasMailingTemplate] = useState("");
   const [switchToOpen, setSwitchToOpen] = useState(false);
   const switchToRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<"print" | "export">(
+    mode === "export" ? "export" : "print",
+  );
 
 
   const handleFormatChange = (value: string) => {
@@ -171,6 +175,7 @@ export function PrintExportPanel({
     setListPrintCategory("");
     setListPrintTemplate("");
     setFormat(mode === "export" ? "" : "A4 (794 x 1123 px)");
+    setActiveTab(mode === "export" ? "export" : "print");
   }, [mode, initialCategory, recordCount]);
 
   const isCanvas = mode === "print" && category === "Canvas Template";
@@ -884,6 +889,396 @@ export function PrintExportPanel({
                   </div>
                 </>
               )}
+            </aside>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // ── Unified tabbed detail-view panel ────────────────────────────────────────
+  if (singleRecord) {
+    const isDefaultPrintCat = category === "Default Print";
+    const isCanvasCat       = category === "Canvas Template";
+    const isMailMergeCat    = category === "Mail Merge Template";
+    const isEmailCat        = category === "Email Template";
+
+    const srCategoryOptions = printCategoryOverride ?? printCategories;
+
+    const srTemplateLabel = isCanvasCat
+      ? "Choose Paper format"
+      : isMailMergeCat
+        ? "Choose a Mail Merge Template :"
+        : isEmailCat
+          ? "Choose an Email Template"
+          : "Choose an Inventory Template";
+
+    const srTemplateOptions = isCanvasCat
+      ? paperFormats
+      : isMailMergeCat
+        ? mailMergeTemplates
+        : isEmailCat
+          ? emailTemplates
+          : inventoryTemplates;
+
+    const showOptions = !!template || isDefaultPrintCat;
+
+    const srPreview = () => {
+      if (isDefaultPrintCat) return <LeadDocument name="Stepen" />;
+      if (!template) return (
+        <p className="grid h-full place-items-center text-sm text-muted-foreground">
+          Choose the template to preview
+        </p>
+      );
+      if (isEmailCat) return <EmailDocument templateName={template} />;
+      if (isCanvasCat) return printViewTemplate
+        ? <ServiceReportDocument />
+        : <p className="grid h-full place-items-center text-sm text-muted-foreground">Choose a print view to preview</p>;
+      return <QuoteDocument />;
+    };
+
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
+          side="left"
+          className="flex w-full flex-col gap-0 bg-crm-canvas p-0 sm:max-w-none [&>button]:hidden"
+        >
+          <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
+            <SheetTitle className="text-xl">
+              {activeTab === "print" ? "Print Preview" : "Export to PDF"}
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              Print or export this record.
+            </SheetDescription>
+            <div className="ml-auto flex items-center gap-3">
+              <Button variant="outline" className="rounded-lg" onClick={close}>
+                Cancel
+              </Button>
+              {activeTab === "print" ? (
+                <Button className="rounded-lg" onClick={() => toast("Printing…")}>
+                  <Printer className="size-4" />
+                  Print
+                </Button>
+              ) : (
+                <Button className="rounded-lg" onClick={() => toast("Downloading…")}>
+                  <Download className="size-4" />
+                  Download
+                </Button>
+              )}
+            </div>
+          </header>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+            {/* Preview */}
+            <div className="relative min-h-0 flex-1 overflow-y-auto p-6">
+              {srPreview()}
+            </div>
+
+            {/* Sidebar */}
+            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-80 lg:border-l lg:border-t-0">
+
+              {/* Tab switcher — underline style, full-width */}
+              <div className="flex shrink-0 border-b border-crm-line">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("print")}
+                  className={cn(
+                    "flex-1 py-3 text-sm font-medium transition-colors",
+                    activeTab === "print"
+                      ? "border-b-2 border-crm-accent text-crm-accent"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Print Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("export")}
+                  className={cn(
+                    "flex-1 py-3 text-sm font-medium transition-colors",
+                    activeTab === "export"
+                      ? "border-b-2 border-crm-accent text-crm-accent"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Export to PDF
+                </button>
+              </div>
+
+              {/* Scrollable sidebar content */}
+              <div className="flex-1 space-y-6 overflow-y-auto p-6">
+
+              {/* Template Category */}
+              <div className="space-y-2">
+                <FieldLabel>Choose a Template Category</FieldLabel>
+                <Select value={category} onValueChange={handleCategoryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Templates" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {srCategoryOptions.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Template (not for Default Print) */}
+              {category && !isDefaultPrintCat && (
+                <div className="space-y-2">
+                  <FieldLabel>{srTemplateLabel}</FieldLabel>
+                  <Select value={template} onValueChange={handleSecondChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Templates" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {srTemplateOptions.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* ── Shared: Layout + Paper Size ─────────────────── */}
+              {showOptions && !isCanvasCat && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <FieldLabel>Layout</FieldLabel>
+                    <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="portrait" id="sr-layout-portrait" />
+                        <Label htmlFor="sr-layout-portrait">Portrait</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="landscape" id="sr-layout-landscape" />
+                        <Label htmlFor="sr-layout-landscape">Landscape</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <FieldLabel>Paper Size</FieldLabel>
+                    <RadioGroup value={paperSize} onValueChange={setPaperSize} className="flex gap-6">
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="a4" id="sr-paper-a4" />
+                        <Label htmlFor="sr-paper-a4">A4</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="letter" id="sr-paper-letter" />
+                        <Label htmlFor="sr-paper-letter">US Letter</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Print tab: View as + Generator ──────────────── */}
+              {showOptions && !isCanvasCat && activeTab === "print" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <FieldLabel>View as</FieldLabel>
+                    <RadioGroup value={viewAs} onValueChange={setViewAs} className="flex gap-6">
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="html" id="sr-view-html" />
+                        <Label htmlFor="sr-view-html">HTML</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="pdf" id="sr-view-pdf" />
+                        <Label htmlFor="sr-view-pdf">PDF</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-3 rounded-lg border border-crm-line bg-crm-canvas p-4">
+                    <p className="text-sm leading-relaxed">
+                      <span className="font-semibold">Info:</span> If you notice any misalignment,{" "}
+                      <span className="font-semibold">switch to the Alternate PDF generator.</span>
+                    </p>
+                    <Select value={generator} onValueChange={setGenerator}>
+                      <SelectTrigger className="bg-crm-surface">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pdfGenerators.map((g) => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {isMailMergeCat && template && (
+                    <p className="text-sm text-muted-foreground">Monthly usage limit: 0/1000</p>
+                  )}
+                </div>
+              )}
+
+              {/* ── Export tab: File Name + Password ────────────── */}
+              {showOptions && !isCanvasCat && activeTab === "export" && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <FieldLabel>File Name</FieldLabel>
+                    <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                    <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
+                      Type &quot;#&quot; to insert merge field.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <FieldLabel>Password Protection</FieldLabel>
+                      <Switch
+                        checked={passwordProtection}
+                        onCheckedChange={(v) => {
+                          setPasswordProtection(v);
+                          if (!v) { setPassword(""); setPwPopoverOpen(false); }
+                        }}
+                        aria-label="Password protection"
+                      />
+                    </div>
+                    {passwordProtection && (
+                      <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
+                        <PopoverAnchor asChild>
+                          <Input
+                            value={password}
+                            placeholder="Enter password"
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setPassword(value);
+                              const idx = value.lastIndexOf("#");
+                              if (idx !== -1 && !value.slice(idx + 1).includes(" ")) {
+                                setPwQuery(value.slice(idx + 1).toLowerCase());
+                                setPwPopoverOpen(true);
+                              } else {
+                                setPwPopoverOpen(false);
+                              }
+                            }}
+                          />
+                        </PopoverAnchor>
+                        <PopoverContent
+                          align="start"
+                          className="w-64 max-h-80 overflow-y-auto p-0"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
+                        >
+                          {(() => {
+                            const groups = mergeFieldGroups
+                              .map((g) => ({
+                                ...g,
+                                fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)),
+                              }))
+                              .filter((g) => g.fields.length > 0);
+                            if (groups.length === 0) {
+                              return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
+                            }
+                            return groups.map((g) => (
+                              <div key={g.module} className="py-1">
+                                <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
+                                {g.fields.map((f) => (
+                                  <button
+                                    key={f}
+                                    type="button"
+                                    className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                    onClick={() => {
+                                      setPassword((prev) => {
+                                        const idx = prev.lastIndexOf("#");
+                                        if (idx === -1) return prev;
+                                        return `${prev.slice(0, idx)}#${f}#`;
+                                      });
+                                      setPwPopoverOpen(false);
+                                    }}
+                                  >
+                                    {f}
+                                  </button>
+                                ))}
+                              </div>
+                            ));
+                          })()}
+                          <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">
+                            Only Date, Email and Number type fields are allowed.
+                          </p>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="sr-set-default"
+                        checked={setDefault}
+                        onCheckedChange={(v) => setSetDefault(v === true)}
+                      />
+                      <Label htmlFor="sr-set-default">Set as default file format for the org</Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Canvas-specific options (both tabs) ─────────── */}
+              {isCanvasCat && template && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <FieldLabel>Choose Print View</FieldLabel>
+                    <Select value={printViewTemplate} onValueChange={setPrintViewTemplate}>
+                      <SelectTrigger className="bg-crm-surface">
+                        <SelectValue placeholder="Select a template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {canvasPrintViewTemplates.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {printViewTemplate && (
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <span>
+                          {parsePaperFormat(template)} <Info className="inline size-3.5" /> • {layoutLabel}
+                        </span>
+                        <button
+                          type="button"
+                          className="text-crm-accent hover:underline"
+                          onClick={() => setPrintViewTemplate("")}
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {printViewTemplate && (
+                    <>
+                      <div className="space-y-2">
+                        <FieldLabel>Print Record in</FieldLabel>
+                        <Select value={printRecord} onValueChange={setPrintRecord}>
+                          <SelectTrigger className="bg-crm-surface"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {printRecordOptions.map((o) => (
+                              <SelectItem key={o} value={o}>{o}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-3">
+                        <FieldLabel>Margin</FieldLabel>
+                        <Slider value={[margin]} min={0} max={50} step={1} onValueChange={(v) => setMargin(v[0] ?? 0)} />
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>0</span><span>50</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="sr-margin-same"
+                            checked={marginSame}
+                            onCheckedChange={(v) => setMarginSame(!!v)}
+                          />
+                          <Label htmlFor="sr-margin-same">Margin same for all sides</Label>
+                        </div>
+                      </div>
+                      {activeTab === "export" && (
+                        <div className="space-y-2">
+                          <FieldLabel>File Name</FieldLabel>
+                          <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                          <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
+                            Type &quot;#&quot; to insert merge field.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+              </div>{/* end scrollable content */}
             </aside>
           </div>
         </SheetContent>

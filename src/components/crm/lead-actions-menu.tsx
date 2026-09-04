@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/lib/utils";
 import { PrintExportPanel } from "./print-export-panel";
-import type { Mode } from "./print-export-panel";
 
 // Non-inventory (Leads) Print Preview categories
 const leadPrintCategories = [
@@ -26,7 +25,7 @@ const leadExportCategories = [
 
 const groups: string[][] = [
   ["Clone", "Share", "Delete"],
-  ["Print & Export", "Send Email", "Mail Merge"],
+  ["Print / Export", "Send Email", "Mail Merge"],
   [
     "Customize Business Card",
     "Organize Lead Details",
@@ -42,11 +41,9 @@ const groups: string[][] = [
 export function LeadActionsMenu() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelMode, setPanelMode] = useState<Mode>("print");
 
-  const handlePrintExportSelect = (mode: Mode) => {
+  const handlePrintExportSelect = () => {
     setMenuOpen(false);
-    setPanelMode(mode);
     setPanelOpen(true);
   };
 
@@ -74,43 +71,15 @@ export function LeadActionsMenu() {
             {groups.map((group, i) => (
               <div key={group[0]}>
                 {i > 0 && <DropdownMenuPrimitive.Separator className="my-1 h-px bg-muted" />}
-                {group.map((item) =>
-                  item === "Print & Export" ? (
-                    <DropdownMenuPrimitive.Sub key={item}>
-                      <DropdownMenuPrimitive.SubTrigger className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent">
-                        {item}
-                        <ChevronRight className="ml-auto size-4" />
-                      </DropdownMenuPrimitive.SubTrigger>
-                      <DropdownMenuPrimitive.Portal>
-                        <DropdownMenuPrimitive.SubContent
-                          sideOffset={4}
-                          className="z-50 w-56 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-                        >
-                          <DropdownMenuPrimitive.Item
-                            className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                            onSelect={() => handlePrintExportSelect("print")}
-                          >
-                            Print Preview
-                          </DropdownMenuPrimitive.Item>
-                          <DropdownMenuPrimitive.Item
-                            className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                            onSelect={() => handlePrintExportSelect("export")}
-                          >
-                            Export to PDF
-                          </DropdownMenuPrimitive.Item>
-                        </DropdownMenuPrimitive.SubContent>
-                      </DropdownMenuPrimitive.Portal>
-                    </DropdownMenuPrimitive.Sub>
-                  ) : (
-                    <DropdownMenuPrimitive.Item
-                      key={item}
-                      className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                      onSelect={() => toast(item)}
-                    >
-                      {item}
-                    </DropdownMenuPrimitive.Item>
-                  )
-                )}
+                {group.map((item) => (
+                  <DropdownMenuPrimitive.Item
+                    key={item}
+                    className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+                    onSelect={item === "Print / Export" ? handlePrintExportSelect : () => toast(item)}
+                  >
+                    {item}
+                  </DropdownMenuPrimitive.Item>
+                ))}
               </div>
             ))}
           </DropdownMenuPrimitive.Content>
@@ -120,7 +89,7 @@ export function LeadActionsMenu() {
       <PrintExportPanel
         open={panelOpen}
         onOpenChange={setPanelOpen}
-        mode={panelMode}
+        mode="print"
         printCategoryOverride={leadPrintCategories}
         exportCategoryOverride={leadExportCategories}
         singleRecord

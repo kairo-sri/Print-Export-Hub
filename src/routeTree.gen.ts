@@ -10,13 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LeadDetailRouteImport } from './routes/lead-detail'
 import { Route as LeadzzRouteImport } from './routes/leadzz'
 import { Route as QuotesRouteImport } from './routes/quotes'
-import { Route as LeadDetailRouteImport } from './routes/lead-detail'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeadDetailRoute = LeadDetailRouteImport.update({
+  id: '/lead-detail',
+  path: '/lead-detail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LeadzzRoute = LeadzzRouteImport.update({
@@ -29,44 +34,39 @@ const QuotesRoute = QuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeadDetailRoute = LeadDetailRouteImport.update({
-  id: '/lead-detail',
-  path: '/lead-detail',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/lead-detail': typeof LeadDetailRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/lead-detail': typeof LeadDetailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/lead-detail': typeof LeadDetailRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/lead-detail': typeof LeadDetailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/lead-detail': typeof LeadDetailRoute
   '/leadzz': typeof LeadzzRoute
   '/quotes': typeof QuotesRoute
-  '/lead-detail': typeof LeadDetailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/leadzz' | '/quotes' | '/lead-detail'
+  fullPaths: '/' | '/lead-detail' | '/leadzz' | '/quotes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/leadzz' | '/quotes' | '/lead-detail'
-  id: '__root__' | '/' | '/leadzz' | '/quotes' | '/lead-detail'
+  to: '/' | '/lead-detail' | '/leadzz' | '/quotes'
+  id: '__root__' | '/' | '/lead-detail' | '/leadzz' | '/quotes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LeadDetailRoute: typeof LeadDetailRoute
   LeadzzRoute: typeof LeadzzRoute
   QuotesRoute: typeof QuotesRoute
-  LeadDetailRoute: typeof LeadDetailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lead-detail': {
+      id: '/lead-detail'
+      path: '/lead-detail'
+      fullPath: '/lead-detail'
+      preLoaderRoute: typeof LeadDetailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/leadzz': {
@@ -92,21 +99,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lead-detail': {
-      id: '/lead-detail'
-      path: '/lead-detail'
-      fullPath: '/lead-detail'
-      preLoaderRoute: typeof LeadDetailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LeadDetailRoute: LeadDetailRoute,
   LeadzzRoute: LeadzzRoute,
   QuotesRoute: QuotesRoute,
-  LeadDetailRoute: LeadDetailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
