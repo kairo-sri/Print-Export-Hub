@@ -114,53 +114,42 @@ const moduleActions = [
   "Deduplicate Leadzz",
   "Add to Campaigns",
   "Create Client Script",
-  "Export Leadzz",
   "Zoho Sheet View",
-  "Print View",
+  "Print & Export",
 ];
 
 export function LeadzzView() {
   const [selected, setSelected] = useState<string[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelMode, setPanelMode] = useState<Mode>("print");
-  const [panelInitialCategory, setPanelInitialCategory] = useState<string | undefined>();
-  const [panelRecordCount, setPanelRecordCount] = useState<number | undefined>();
   const [panelListViewExport, setPanelListViewExport] = useState(false);
+  const [panelRecordCount, setPanelRecordCount] = useState<number | undefined>();
   const allSelected = selected.length === leads.length;
   const anySelected = selected.length > 0;
 
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const openExportPDF = () => {
-    setPanelMode("export");
-    setPanelInitialCategory(undefined);
-    setPanelRecordCount(undefined);
+  // Unified Print / Export — opens tabbed combined panel (bulk)
+  const openPrintExport = (count?: number) => {
+    setPanelMode("print");
     setPanelListViewExport(true);
+    setPanelRecordCount(count);
     setPanelOpen(true);
   };
 
-  const openPrintCanvas = () => {
+  // Print View only — no records selected, no export tab
+  const openPrintView = () => {
     setPanelMode("listprint");
-    setPanelInitialCategory(undefined);
-    setPanelRecordCount(selected.length || leads.length);
     setPanelListViewExport(false);
-    setPanelOpen(true);
-  };
-
-  const openPrintPreview = () => {
-    setPanelMode("listprint");
-    setPanelInitialCategory(undefined);
     setPanelRecordCount(80);
-    setPanelListViewExport(false);
     setPanelOpen(true);
   };
 
   const openMailingLabels = () => {
     setPanelMode("mailing");
-    setPanelInitialCategory(undefined);
-    setPanelRecordCount(selected.length || leads.length);
     setPanelListViewExport(false);
+    setPanelRecordCount(selected.length || leads.length);
     setPanelOpen(true);
   };
 
@@ -218,8 +207,7 @@ export function LeadzzView() {
               </button>
             </div>
             <BulkActionsMenu
-              onExportPDF={openExportPDF}
-              onPrintCanvas={openPrintCanvas}
+              onPrintExport={() => openPrintExport(selected.length || leads.length)}
               onMailingLabels={openMailingLabels}
             />
           </>
@@ -263,8 +251,7 @@ export function LeadzzView() {
                 </button>
               </div>
               <ModuleActionsMenu
-                onExportPDF={openExportPDF}
-                onPrintPreview={openPrintPreview}
+                onPrintView={openPrintView}
               />
             </div>
           </>
@@ -362,23 +349,20 @@ export function LeadzzView() {
         open={panelOpen}
         onOpenChange={setPanelOpen}
         mode={panelMode}
-        initialCategory={panelInitialCategory}
         recordCount={panelRecordCount}
         listViewExport={panelListViewExport}
-        listExportCategoryOverride={["Email Template", "Mail Merge Template", "Canvas Template", "List View"]}
-        printViewCategoryOverride={["List View", "Mail Merge Template", "Email Templates", "Canvas View"]}
+        listExportCategoryOverride={["List View", "Email Templates", "Mail Merge Templates", "Canvas Templates"]}
+        printViewCategoryOverride={["List View", "Mail Merge Templates", "Email Templates", "Canvas Templates"]}
       />
     </div>
   );
 }
 
 function BulkActionsMenu({
-  onExportPDF,
-  onPrintCanvas,
+  onPrintExport,
   onMailingLabels,
 }: {
-  onExportPDF: () => void;
-  onPrintCanvas: () => void;
+  onPrintExport: () => void;
   onMailingLabels: () => void;
 }) {
   return (
@@ -412,15 +396,15 @@ function BulkActionsMenu({
                   >
                     <DropdownMenuPrimitive.Item
                       className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                      onSelect={onExportPDF}
+                      onSelect={onPrintExport}
                     >
-                      Export to PDF
+                      Print / Export PDF
                     </DropdownMenuPrimitive.Item>
                     <DropdownMenuPrimitive.Item
                       className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
-                      onSelect={onPrintCanvas}
+                      onSelect={() => toast("Export as Spreadsheet")}
                     >
-                      Print preview
+                      Export as Spreadsheet
                     </DropdownMenuPrimitive.Item>
                     <DropdownMenuPrimitive.Item
                       className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
@@ -439,7 +423,7 @@ function BulkActionsMenu({
               >
                 {item}
               </DropdownMenuPrimitive.Item>
-            ),
+            )
           )}
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
@@ -448,11 +432,9 @@ function BulkActionsMenu({
 }
 
 function ModuleActionsMenu({
-  onExportPDF,
-  onPrintPreview,
+  onPrintView,
 }: {
-  onExportPDF: () => void;
-  onPrintPreview: () => void;
+  onPrintView: () => void;
 }) {
   return (
     <DropdownMenuPrimitive.Root>
@@ -472,8 +454,37 @@ function ModuleActionsMenu({
           className="z-50 w-60 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md"
         >
           {moduleActions.map((item) => {
-            const isSparkle = item === "Create Client Script" || item === "Print View";
+            const isSparkle = item === "Create Client Script";
             const isSheetView = item === "Zoho Sheet View";
+            if (item === "Print & Export") {
+              return (
+                <DropdownMenuPrimitive.Sub key={item}>
+                  <DropdownMenuPrimitive.SubTrigger className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent">
+                    {item}
+                    <ChevronRight className="ml-auto size-4" />
+                  </DropdownMenuPrimitive.SubTrigger>
+                  <DropdownMenuPrimitive.Portal>
+                    <DropdownMenuPrimitive.SubContent
+                      sideOffset={4}
+                      className="z-50 w-56 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+                    >
+                      <DropdownMenuPrimitive.Item
+                        className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+                        onSelect={onPrintView}
+                      >
+                        Print View
+                      </DropdownMenuPrimitive.Item>
+                      <DropdownMenuPrimitive.Item
+                        className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+                        onSelect={() => toast("Export as Spreadsheet")}
+                      >
+                        Export as Spreadsheet
+                      </DropdownMenuPrimitive.Item>
+                    </DropdownMenuPrimitive.SubContent>
+                  </DropdownMenuPrimitive.Portal>
+                </DropdownMenuPrimitive.Sub>
+              );
+            }
             return (
               <DropdownMenuPrimitive.Item
                 key={item}
@@ -481,11 +492,7 @@ function ModuleActionsMenu({
                   "relative flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2 text-[15px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground",
                   isSheetView && "bg-muted",
                 )}
-                onSelect={() => {
-                  if (item === "Export Leadzz") return onExportPDF();
-                  if (item === "Print View") return onPrintPreview();
-                  toast(item);
-                }}
+                onSelect={() => toast(item)}
               >
                 {item}
                 {isSparkle && <Sparkles className="size-3.5 text-yellow-500" />}

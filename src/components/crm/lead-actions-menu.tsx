@@ -10,17 +10,17 @@ import { PrintExportPanel } from "./print-export-panel";
 // Non-inventory (Leads) Print Preview categories
 const leadPrintCategories = [
   "Default Print",
-  "Mail Merge Template",
-  "Email Template",
-  "Canvas Template",
+  "Mail Merge Templates",
+  "Email Templates",
+  "Canvas Templates",
 ];
 
 // Non-inventory (Leads) Export to PDF categories
 const leadExportCategories = [
   "Default Print",
-  "Mail Merge Template",
-  "Email Template",
-  "Canvas Template",
+  "Mail Merge Templates",
+  "Email Templates",
+  "Canvas Templates",
 ];
 
 const groups: string[][] = [

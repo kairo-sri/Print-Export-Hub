@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { PrintExportPanel } from "./print-export-panel";
 import type { Mode } from "./print-export-panel";
@@ -51,7 +50,7 @@ const bulkActions = [
 ];
 
 const moduleActions = [
-  "Mass Transfer", "Mass Delete", "Mass Update", "Export Quotes", "Print View",
+  "Mass Transfer", "Mass Delete", "Mass Update", "Print & Export",
 ];
 
 const stageColors: Record<string, string> = {
@@ -66,27 +65,31 @@ export function QuotesView() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelMode, setPanelMode] = useState<Mode>("print");
   const [panelListViewExport, setPanelListViewExport] = useState(false);
+  const [panelRecordCount, setPanelRecordCount] = useState<number | undefined>();
   const allSelected = selected.length === quotes.length;
   const anySelected = selected.length > 0;
 
   const toggle = (id: string) =>
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const openExportPDF = () => {
-    setPanelMode("export");
+  const openPrintExport = (count?: number) => {
+    setPanelMode("print");
     setPanelListViewExport(true);
+    setPanelRecordCount(count);
     setPanelOpen(true);
   };
 
-  const openPrintPreview = () => {
-    setPanelMode("listprint");
-    setPanelListViewExport(false);
-    setPanelOpen(true);
-  };
-
-  const openPrintMailingLabels = () => {
+  const openMailingLabels = () => {
     setPanelMode("mailing");
     setPanelListViewExport(false);
+    setPanelRecordCount(selected.length || quotes.length);
+    setPanelOpen(true);
+  };
+
+  const openPrintView = () => {
+    setPanelMode("listprint");
+    setPanelListViewExport(false);
+    setPanelRecordCount(quotes.length);
     setPanelOpen(true);
   };
 
@@ -113,7 +116,7 @@ export function QuotesView() {
             <span className="text-sm"><strong>{selected.length}</strong> Records Selected.</span>
             <button type="button" onClick={() => setSelected([])} className="text-sm font-medium text-crm-accent">Clear</button>
             <Button variant="outline" className="ml-2 rounded-lg" onClick={() => toast("Send Email")}>Send Email</Button>
-            <BulkActionsMenu onExportPDF={openExportPDF} onPrintPreview={openPrintPreview} onPrintMailingLabels={openPrintMailingLabels} />
+            <BulkActionsMenu onPrintExport={() => openPrintExport(selected.length)} onMailingLabels={openMailingLabels} />
           </>
         ) : (
           <>
@@ -137,7 +140,7 @@ export function QuotesView() {
                 <span className="w-px bg-white/25" />
                 <button type="button" className="grid w-8 place-items-center"><ChevronDown className="size-4" /></button>
               </div>
-              <ModuleActionsMenu onExportPDF={openExportPDF} onPrintPreview={openPrintPreview} />
+              <ModuleActionsMenu onPrintView={openPrintView} />
             </div>
           </>
         )}
@@ -200,14 +203,16 @@ export function QuotesView() {
         open={panelOpen}
         onOpenChange={setPanelOpen}
         mode={panelMode}
-        recordCount={selected.length || quotes.length}
+        recordCount={panelRecordCount}
         listViewExport={panelListViewExport}
+        listExportCategoryOverride={["List View", "Inventory Templates", "Mail Merge Templates", "Canvas Templates"]}
+        printViewCategoryOverride={["List View", "Inventory Templates", "Mail Merge Templates", "Canvas Templates"]}
       />
     </div>
   );
 }
 
-function BulkActionsMenu({ onExportPDF, onPrintPreview, onPrintMailingLabels }: { onExportPDF: () => void; onPrintPreview: () => void; onPrintMailingLabels: () => void }) {
+function BulkActionsMenu({ onPrintExport, onMailingLabels }: { onPrintExport: () => void; onMailingLabels: () => void }) {
   return (
     <DropdownMenuPrimitive.Root>
       <DropdownMenuPrimitive.Trigger asChild>
@@ -225,9 +230,9 @@ function BulkActionsMenu({ onExportPDF, onPrintPreview, onPrintMailingLabels }: 
                 </DropdownMenuPrimitive.SubTrigger>
                 <DropdownMenuPrimitive.Portal>
                   <DropdownMenuPrimitive.SubContent sideOffset={4} className="z-50 w-56 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md">
-                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onExportPDF}>Export to PDF</DropdownMenuPrimitive.Item>
-                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintPreview}>Print preview</DropdownMenuPrimitive.Item>
-                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintMailingLabels}>Print Mailing Labels</DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintExport}>Print / Export PDF</DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={() => toast("Export as Spreadsheet")}>Export as Spreadsheet</DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onMailingLabels}>Print Mailing Labels</DropdownMenuPrimitive.Item>
                   </DropdownMenuPrimitive.SubContent>
                 </DropdownMenuPrimitive.Portal>
               </DropdownMenuPrimitive.Sub>
@@ -241,7 +246,7 @@ function BulkActionsMenu({ onExportPDF, onPrintPreview, onPrintMailingLabels }: 
   );
 }
 
-function ModuleActionsMenu({ onExportPDF, onPrintPreview }: { onExportPDF: () => void; onPrintPreview: () => void }) {
+function ModuleActionsMenu({ onPrintView }: { onPrintView: () => void }) {
   return (
     <DropdownMenuPrimitive.Root>
       <DropdownMenuPrimitive.Trigger asChild>
@@ -251,19 +256,23 @@ function ModuleActionsMenu({ onExportPDF, onPrintPreview }: { onExportPDF: () =>
       </DropdownMenuPrimitive.Trigger>
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content align="end" sideOffset={4} className="z-50 w-60 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md">
-          {moduleActions.map((item) => (
-            <DropdownMenuPrimitive.Item
-              key={item}
-              className="flex cursor-default select-none items-center rounded-lg px-3 py-2 text-[15px] outline-none focus:bg-accent"
-              onSelect={() => {
-                if (item === "Export Quotes") return onExportPDF();
-                if (item === "Print View") return onPrintPreview();
-                toast(item);
-              }}
-            >
-              {item}
-            </DropdownMenuPrimitive.Item>
-          ))}
+          {moduleActions.map((item) =>
+            item === "Print & Export" ? (
+              <DropdownMenuPrimitive.Sub key={item}>
+                <DropdownMenuPrimitive.SubTrigger className="relative flex cursor-default select-none items-center rounded-lg px-3 py-2 text-[15px] outline-none transition-colors focus:bg-accent data-[state=open]:bg-accent">
+                  {item} <ChevronRightIcon className="ml-auto size-4" />
+                </DropdownMenuPrimitive.SubTrigger>
+                <DropdownMenuPrimitive.Portal>
+                  <DropdownMenuPrimitive.SubContent sideOffset={4} className="z-50 w-56 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-md">
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={onPrintView}>Print View</DropdownMenuPrimitive.Item>
+                    <DropdownMenuPrimitive.Item className="flex cursor-default select-none items-center rounded-lg px-3 py-2.5 text-[15px] outline-none focus:bg-accent" onSelect={() => toast("Export as Spreadsheet")}>Export as Spreadsheet</DropdownMenuPrimitive.Item>
+                  </DropdownMenuPrimitive.SubContent>
+                </DropdownMenuPrimitive.Portal>
+              </DropdownMenuPrimitive.Sub>
+            ) : (
+              <DropdownMenuPrimitive.Item key={item} className="flex cursor-default select-none items-center rounded-lg px-3 py-2 text-[15px] outline-none focus:bg-accent" onSelect={() => toast(item)}>{item}</DropdownMenuPrimitive.Item>
+            )
+          )}
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
     </DropdownMenuPrimitive.Root>

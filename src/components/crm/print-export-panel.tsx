@@ -30,25 +30,14 @@ import { CanvasMailingDocument } from "./canvas-mailing-document";
 
 export type Mode = "print" | "export" | "mailing" | "listprint";
 
-const printCategories = ["Inventory Templates", "Mail Merge Template", "Canvas Template"];
-const printViewCategories = [
-  "Inventory Templates",
-  "Email Templates",
-  "Mail Merge Templates",
-  "Canvas View",
-  "List View",
-];
-const exportCategories = [
-  "Inventory Template",
-  "Mail Merge Template",
-  "Canvas Template",
-];
+const printCategories = ["Inventory Templates", "Mail Merge Templates", "Canvas Templates"];
+const exportCategories = ["Inventory Templates", "Mail Merge Templates", "Canvas Templates"];
 const listExportCategories = [
-  "Inventory Template",
-  "Email Template",
-  "Mail Merge Template",
-  "Canvas Template",
   "List View",
+  "Inventory Templates",
+  "Mail Merge Templates",
+  "Email Templates",
+  "Canvas Templates",
 ];
 const inventoryTemplates = ["Quote Template", "Quote Template 1", "Quote Template 2"];
 const mailMergeTemplates = ["Quotes Mail merge Template", "Quotes Mail merge Template 1"];
@@ -154,6 +143,7 @@ export function PrintExportPanel({
   const [canvasMailingTemplate, setCanvasMailingTemplate] = useState("");
   const [switchToOpen, setSwitchToOpen] = useState(false);
   const switchToRef = useRef<HTMLDivElement>(null);
+  const lrExportSectionRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<"print" | "export">(
     mode === "export" ? "export" : "print",
   );
@@ -178,13 +168,21 @@ export function PrintExportPanel({
     setActiveTab(mode === "export" ? "export" : "print");
   }, [mode, initialCategory, recordCount]);
 
-  const isCanvas = mode === "print" && category === "Canvas Template";
-  const isExportCanvas = mode === "export" && category === "Canvas Template";
-  const isMailMerge = mode === "print" && category === "Mail Merge Template";
+  useEffect(() => {
+    if (listViewExport && !singleRecord && activeTab === "export") {
+      setTimeout(() => {
+        lrExportSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 50);
+    }
+  }, [activeTab, listViewExport, singleRecord]);
+
+  const isCanvas = mode === "print" && category === "Canvas Templates";
+  const isExportCanvas = mode === "export" && category === "Canvas Templates";
+  const isMailMerge = mode === "print" && category === "Mail Merge Templates";
   const isInventory = mode === "print" && category === "Inventory Templates";
   const isDefaultPrint = mode === "print" && category === "Default Print";
   const isExportDefaultPrint = mode === "export" && category === "Default Print";
-  const isPrintEmailTemplate = mode === "print" && category === "Email Template";
+  const isPrintEmailTemplate = mode === "print" && category === "Email Templates";
   const isPrintListView = mode === "print" && printCategory === "List View";
   const categoryOptions =
     mode === "print"
@@ -206,39 +204,39 @@ export function PrintExportPanel({
         : inventoryTemplates;
 
   const exportTemplateOptions =
-    category === "Mail Merge Template"
+    category === "Mail Merge Templates"
       ? mailMergeTemplates
-      : category === "Canvas Template"
+      : category === "Canvas Templates"
         ? canvasPrintViewTemplates
-        : category === "Email Template"
+        : category === "Email Templates"
           ? emailTemplates
           : inventoryTemplates;
   const exportTemplateLabel =
-    category === "Mail Merge Template"
+    category === "Mail Merge Templates"
       ? "Choose a Mail Merge Template"
-      : category === "Canvas Template"
+      : category === "Canvas Templates"
         ? "Choose Print view Templates"
-        : category === "Email Template"
+        : category === "Email Templates"
           ? "Choose an Email Template"
           : "Choose an Inventory Template";
   // List-view export: category drives whether a paper format is picked first
   const listExportNeedsFormat =
-    !!listViewExport && category === "Canvas Template";
+    !!listViewExport && category === "Canvas Templates";
   const isListViewCategory = !!listViewExport && category === "List View";
   const listExportTemplateOptions =
-    category === "Inventory Template"
+    category === "Inventory Templates"
       ? inventoryTemplates
-      : category === "Email Template"
+      : category === "Email Templates"
         ? emailTemplates
-        : category === "Mail Merge Template"
+        : category === "Mail Merge Templates"
           ? mailMergeTemplates
           : canvasPrintViewTemplates;
   const listExportTemplateLabel =
-    category === "Inventory Template"
+    category === "Inventory Templates"
       ? "Choose an Inventory Template"
-      : category === "Email Template"
+      : category === "Email Templates"
         ? "Choose an Email Template :"
-        : category === "Mail Merge Template"
+        : category === "Mail Merge Templates"
           ? "Choose a Mail Merge Template :"
           : "Choose Print view Templates";
   const exportOptionsVisible =
@@ -247,7 +245,7 @@ export function PrintExportPanel({
       ? !!category && !!template && (!listExportNeedsFormat || !!format)
       : category === "Default Print"
         ? true
-        : category === "Canvas Template"
+        : category === "Canvas Templates"
           ? !!format && !!template
           : !!category && !!template);
 
@@ -344,7 +342,7 @@ export function PrintExportPanel({
                     Choose the template to preview
                   </div>
                 )
-              ) : listPrintCategory === "Canvas View" ? (
+              ) : listPrintCategory === "Canvas Templates" ? (
                 printViewTemplate ? (
                   <ServiceReportDocument />
                 ) : (
@@ -365,7 +363,7 @@ export function PrintExportPanel({
             </div>
 
             {/* Bottom record navigation — shown when a template is selected */}
-            {listPrintCategory !== "" && (listPrintTemplate || (listPrintCategory === "Canvas View" && printViewTemplate)) && (
+            {listPrintCategory !== "" && (listPrintTemplate || (listPrintCategory === "Canvas Templates" && printViewTemplate)) && (
               <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
                 <button
                   type="button"
@@ -407,7 +405,7 @@ export function PrintExportPanel({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(printViewCategoryOverride ?? ["List View", "Inventory Templates", "Mail Merge Template", "Email Templates", "Canvas View"]).map((c) => (
+                    {(printViewCategoryOverride ?? ["List View", "Inventory Templates", "Mail Merge Templates", "Email Templates", "Canvas Templates"]).map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
@@ -415,12 +413,12 @@ export function PrintExportPanel({
               </div>
 
               {listPrintCategory === "" ? null : listPrintCategory === "Inventory Templates" ||
-                listPrintCategory === "Mail Merge Template" ||
+                listPrintCategory === "Mail Merge Templates" ||
                 listPrintCategory === "Email Templates" ? (
                 <>
                   <div className="space-y-2">
                     <FieldLabel>
-                      {listPrintCategory === "Mail Merge Template"
+                      {listPrintCategory === "Mail Merge Templates"
                         ? "Choose a Mail Merge Template :"
                         : listPrintCategory === "Email Templates"
                           ? "Choose an Email Template :"
@@ -431,7 +429,7 @@ export function PrintExportPanel({
                         <SelectValue placeholder="Select Templates" />
                       </SelectTrigger>
                       <SelectContent>
-                        {(listPrintCategory === "Mail Merge Template"
+                        {(listPrintCategory === "Mail Merge Templates"
                           ? mailMergeTemplates
                           : listPrintCategory === "Email Templates"
                             ? emailTemplates
@@ -445,7 +443,7 @@ export function PrintExportPanel({
                     </Select>
                   </div>
 
-                  {listPrintCategory !== "Mail Merge Template" && listPrintTemplate && (
+                  {listPrintCategory !== "Mail Merge Templates" && listPrintTemplate && (
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <FieldLabel>View as</FieldLabel>
@@ -516,11 +514,11 @@ export function PrintExportPanel({
                     </div>
                   )}
 
-                  {listPrintCategory === "Mail Merge Template" && (
+                  {listPrintCategory === "Mail Merge Templates" && (
                     <p className="text-sm text-muted-foreground">Monthly usage limit:5/1000</p>
                   )}
                 </>
-              ) : listPrintCategory === "Canvas View" ? (
+              ) : listPrintCategory === "Canvas Templates" ? (
                 <>
                   <div className="space-y-2">
                     <FieldLabel>Paper Format</FieldLabel>
@@ -896,12 +894,394 @@ export function PrintExportPanel({
     );
   }
 
+  // ── Unified tabbed list-view panel (bulk + module-level) ─────────────────────
+  if (listViewExport && !singleRecord) {
+    const total = recordCount ?? 80;
+    const isListViewCat  = category === "List View";
+    const isCanvasCat    = category === "Canvas Templates";
+    const isMailMergeCat = category === "Mail Merge Templates";
+    const isEmailCat     = category === "Email Templates";
+    const lrCategoryOptions = listExportCategoryOverride ?? listExportCategories;
+
+    const lrTemplateLabel = isCanvasCat
+      ? "Choose Print view Templates"
+      : isMailMergeCat
+        ? "Choose a Mail Merge Template :"
+        : isEmailCat
+          ? "Choose an Email Template :"
+          : "Choose an Inventory Template";
+    const lrTemplateOptions = isCanvasCat
+      ? canvasPrintViewTemplates
+      : isMailMergeCat
+        ? mailMergeTemplates
+        : isEmailCat
+          ? emailTemplates
+          : inventoryTemplates;
+
+    const showFormat   = isCanvasCat && !!category;
+    const showTemplate = !isListViewCat && !isCanvasCat && !!category;
+    const showCanvasTpl = isCanvasCat && !!format;
+    const templateReady = isListViewCat || (!isCanvasCat && !!template) || (isCanvasCat && !!printViewTemplate);
+
+    const lrPreview = () => {
+      if (!category) return <p className="grid h-full place-items-center text-sm text-muted-foreground">Choose a category to preview</p>;
+      if (isListViewCat) return <LeadsTableDocument viewName={headerViewName} currentDate={headerDate} rowNumber={rowNumber} gridLines={gridLines} fontSize={fontSize} pageNumber={footerPageNumber} />;
+      if (isCanvasCat)  return printViewTemplate ? <ServiceReportDocument /> : <p className="grid h-full place-items-center text-sm text-muted-foreground">Choose the template to preview</p>;
+      if (isEmailCat && template) return <EmailDocument templateName={template} />;
+      if (template) return <QuoteDocument />;
+      return <p className="grid h-full place-items-center text-sm text-muted-foreground">Choose the template to preview</p>;
+    };
+
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent
+          side="left"
+          className="flex w-full flex-col gap-0 bg-crm-canvas p-0 sm:max-w-none [&>button]:hidden"
+        >
+          <header className="flex items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
+            <SheetTitle className="text-xl">
+              {activeTab === "print" ? "Print Preview" : "Export to PDF"}
+            </SheetTitle>
+            {activeTab === "export" && exportOptionsVisible && (
+              <div className="relative" ref={switchToRef}>
+                <button
+                  type="button"
+                  onClick={() => setSwitchToOpen((o) => !o)}
+                  className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                >
+                  {downloadMode === "individual" ? "Switch to" : "Jump to"}
+                  {switchToOpen ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+                </button>
+                {switchToOpen && (
+                  <div className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border bg-popover shadow-md">
+                    <div className="flex items-center gap-2 border-b px-3 py-2">
+                      <Search className="size-4 shrink-0 text-muted-foreground" />
+                      <input className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder="Search" autoFocus />
+                    </div>
+                    {["Deal Alpha Project", "Q2 Car Sale Jackson", "Premium Package Upgrade", "Deal Sprint May", "Deal Blue Expansion", "Enterprise Contract"].map((record) => (
+                      <button key={record} type="button" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-accent" onClick={() => { toast(`Navigating to ${record}…`); setSwitchToOpen(false); }}>
+                        {record}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {!!recordCount && (
+              <span className="text-sm font-medium text-muted-foreground">
+                {recordCount} Record{recordCount > 1 ? "s" : ""} Selected
+              </span>
+            )}
+            <SheetDescription className="sr-only">Print or export selected records.</SheetDescription>
+            <div className="ml-auto flex items-center gap-3">
+              <Button variant="outline" className="rounded-lg" onClick={close}>Cancel</Button>
+              {activeTab === "print" ? (
+                <Button className="rounded-lg" onClick={() => toast("Printing…")}>
+                  <Printer className="size-4" /> Print
+                </Button>
+              ) : (
+                <Button className="rounded-lg" onClick={() => toast(downloadMode === "individual" ? "Downloading individual files…" : "Downloading PDF…")}>
+                  <Download className="size-4" /> Download
+                </Button>
+              )}
+            </div>
+          </header>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+            {/* Preview */}
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              <div className="relative min-h-0 flex-1 overflow-y-auto p-6">
+                {lrPreview()}
+              </div>
+              {/* Print tab: record navigator */}
+              {activeTab === "print" && templateReady && (
+                <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
+                  <button type="button" aria-label="Previous record" onClick={() => setListPrintPage((p) => Math.max(1, p - 1))} disabled={listPrintPage <= 1} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40">
+                    <ChevronUp className="size-4" />
+                  </button>
+                  <span className="min-w-[60px] text-center text-sm">{listPrintPage} / {total}</span>
+                  <button type="button" aria-label="Next record" onClick={() => setListPrintPage((p) => Math.min(total, p + 1))} disabled={listPrintPage >= total} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40">
+                    <ChevronDown className="size-4" />
+                  </button>
+                </div>
+              )}
+              {/* Export tab: zoom + page nav */}
+              {activeTab === "export" && templateReady && (
+                <div className="flex items-center justify-center gap-4 border-t border-crm-line bg-crm-surface px-6 py-2">
+                  <button type="button" aria-label="Previous page" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40">
+                    {downloadMode === "single" ? <ChevronDown className="size-4" /> : <ChevronLeft className="size-4" />}
+                  </button>
+                  <span className="min-w-[60px] text-center text-sm">{currentPage} / 45</span>
+                  <button type="button" aria-label="Next page" onClick={() => setCurrentPage((p) => Math.min(45, p + 1))} disabled={currentPage >= 45} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas disabled:opacity-40">
+                    {downloadMode === "single" ? <ChevronUp className="size-4" /> : <ChevronRight className="size-4" />}
+                  </button>
+                  <span className="mx-2 h-4 w-px bg-border" />
+                  <button type="button" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(25, z - 25))} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas">
+                    <ZoomOut className="size-4" />
+                  </button>
+                  <span className="min-w-[40px] text-center text-sm">{zoom}%</span>
+                  <button type="button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(200, z + 25))} className="grid size-7 place-items-center rounded-full text-muted-foreground hover:bg-crm-canvas">
+                    <ZoomIn className="size-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-80 lg:border-l lg:border-t-0">
+              {/* Tab switcher */}
+              <div className="flex shrink-0 border-b border-crm-line">
+                <button type="button" onClick={() => setActiveTab("print")} className={cn("flex-1 py-3 text-sm font-medium transition-colors", activeTab === "print" ? "border-b-2 border-crm-accent text-crm-accent" : "text-muted-foreground hover:text-foreground")}>
+                  Print Preview
+                </button>
+                <button type="button" onClick={() => setActiveTab("export")} className={cn("flex-1 py-3 text-sm font-medium transition-colors", activeTab === "export" ? "border-b-2 border-crm-accent text-crm-accent" : "text-muted-foreground hover:text-foreground")}>
+                  Export to PDF
+                </button>
+              </div>
+
+              <div className="flex-1 space-y-6 overflow-y-auto p-6">
+                {/* Category */}
+                <div className="space-y-2">
+                  <FieldLabel>Choose Category</FieldLabel>
+                  <Select value={category} onValueChange={handleCategoryChange}>
+                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                    <SelectContent>
+                      {lrCategoryOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Canvas: format first */}
+                {showFormat && (
+                  <div className="space-y-2">
+                    <FieldLabel>Choose Format</FieldLabel>
+                    <Select value={format} onValueChange={handleFormatChange}>
+                      <SelectTrigger><SelectValue placeholder="Select Format" /></SelectTrigger>
+                      <SelectContent>
+                        {paperFormats.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Template */}
+                {showTemplate && (
+                  <div className="space-y-2">
+                    <FieldLabel>{lrTemplateLabel}</FieldLabel>
+                    <Select value={template} onValueChange={setTemplate}>
+                      <SelectTrigger><SelectValue placeholder="Select Templates" /></SelectTrigger>
+                      <SelectContent>
+                        {lrTemplateOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Canvas: print view template */}
+                {showCanvasTpl && (
+                  <div className="space-y-2">
+                    <FieldLabel>Choose Print View</FieldLabel>
+                    <Select value={printViewTemplate} onValueChange={setPrintViewTemplate}>
+                      <SelectTrigger><SelectValue placeholder="Select a template" /></SelectTrigger>
+                      <SelectContent>
+                        {canvasPrintViewTemplates.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* List View: table options (shared both tabs) */}
+                {isListViewCat && (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <FieldLabel>Paper Size</FieldLabel>
+                      <Select value={paperSize} onValueChange={setPaperSize}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="letter">Letter (8.5 x 11 inches)</SelectItem>
+                          <SelectItem value="a4">A4 (8.27 x 11.69 inches)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>Layout</FieldLabel>
+                      <Select value={layout} onValueChange={setLayout}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="portrait">Portrait View</SelectItem>
+                          <SelectItem value="landscape">Landscape View</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>Column Size</FieldLabel>
+                      <Select value={columnSize} onValueChange={setColumnSize}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Actual Size">Actual Size</SelectItem>
+                          <SelectItem value="Fit to Page">Fit to Page</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>Page Order</FieldLabel>
+                      <Select value={pageOrder} onValueChange={setPageOrder}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Over then down">Over then down</SelectItem>
+                          <SelectItem value="Down then over">Down then over</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>Font Size</FieldLabel>
+                      <Select value={fontSize} onValueChange={setFontSize}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Small">Small</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Large">Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-3 border-t border-crm-line pt-4">
+                      <div className="flex items-center gap-2"><Checkbox id="lr-row" checked={rowNumber} onCheckedChange={(v) => setRowNumber(!!v)} /><Label htmlFor="lr-row">Include row number</Label></div>
+                      <div className="flex items-center gap-2"><Checkbox id="lr-grid" checked={gridLines} onCheckedChange={(v) => setGridLines(!!v)} /><Label htmlFor="lr-grid">Include grid lines</Label></div>
+                    </div>
+                    <div className="space-y-3 border-t border-crm-line pt-4">
+                      <FieldLabel>Headers</FieldLabel>
+                      <div className="flex items-center gap-2"><Checkbox id="lr-hview" checked={headerViewName} onCheckedChange={(v) => setHeaderViewName(!!v)} /><Label htmlFor="lr-hview">View Name</Label></div>
+                      <div className="flex items-center gap-2"><Checkbox id="lr-hdate" checked={headerDate} onCheckedChange={(v) => setHeaderDate(!!v)} /><Label htmlFor="lr-hdate">Current Date</Label></div>
+                    </div>
+                    <div className="space-y-3 border-t border-crm-line pt-4">
+                      <FieldLabel>Footers</FieldLabel>
+                      <div className="flex items-center gap-2"><Checkbox id="lr-fpage" checked={footerPageNumber} onCheckedChange={(v) => setFooterPageNumber(!!v)} /><Label htmlFor="lr-fpage">Page Number</Label></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Canvas: Print Record in + Margin (shared both tabs) */}
+                {isCanvasCat && printViewTemplate && (
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <FieldLabel>Print Record in</FieldLabel>
+                      <Select value={printRecord} onValueChange={setPrintRecord}>
+                        <SelectTrigger className="bg-crm-surface"><SelectValue /></SelectTrigger>
+                        <SelectContent>{printRecordOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-3">
+                      <FieldLabel>Margin</FieldLabel>
+                      <Slider value={[margin]} min={0} max={50} step={1} onValueChange={(v) => setMargin(v[0] ?? 0)} />
+                      <div className="flex justify-between text-xs text-muted-foreground"><span>0</span><span>50</span></div>
+                      <div className="flex items-center gap-2"><Checkbox id="lr-margin" checked={marginSame} onCheckedChange={(v) => setMarginSame(!!v)} /><Label htmlFor="lr-margin">Margin same for all sides</Label></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shared: Layout + Paper Size (for template categories, non-canvas, non-list-view) */}
+                {!isListViewCat && !isCanvasCat && template && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <FieldLabel>Layout</FieldLabel>
+                      <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
+                        <div className="flex items-center gap-2"><RadioGroupItem value="portrait" id="lr-layout-p" /><Label htmlFor="lr-layout-p">Portrait</Label></div>
+                        <div className="flex items-center gap-2"><RadioGroupItem value="landscape" id="lr-layout-l" /><Label htmlFor="lr-layout-l">Landscape</Label></div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>Paper Size</FieldLabel>
+                      <RadioGroup value={paperSize} onValueChange={setPaperSize} className="flex gap-6">
+                        <div className="flex items-center gap-2"><RadioGroupItem value="a4" id="lr-paper-a4" /><Label htmlFor="lr-paper-a4">A4</Label></div>
+                        <div className="flex items-center gap-2"><RadioGroupItem value="letter" id="lr-paper-l" /><Label htmlFor="lr-paper-l">US Letter</Label></div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Print tab specific ───────────────────────────── */}
+                {activeTab === "print" && !isListViewCat && !isCanvasCat && template && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <FieldLabel>View as</FieldLabel>
+                      <RadioGroup value={viewAs} onValueChange={setViewAs} className="flex gap-6">
+                        <div className="flex items-center gap-2"><RadioGroupItem value="html" id="lr-view-html" /><Label htmlFor="lr-view-html">HTML</Label></div>
+                        <div className="flex items-center gap-2"><RadioGroupItem value="pdf" id="lr-view-pdf" /><Label htmlFor="lr-view-pdf">PDF</Label></div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-3 rounded-lg border border-crm-line bg-crm-canvas p-4">
+                      <p className="text-sm leading-relaxed"><span className="font-semibold">Info:</span> If you notice any misalignment, <span className="font-semibold">switch to the Alternate PDF generator.</span></p>
+                      <Select value={generator} onValueChange={setGenerator}>
+                        <SelectTrigger className="bg-crm-surface"><SelectValue /></SelectTrigger>
+                        <SelectContent>{pdfGenerators.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    {isMailMergeCat && <p className="text-sm text-muted-foreground">Monthly usage limit: 0/1000</p>}
+                  </div>
+                )}
+
+                {/* ── Export tab specific ──────────────────────────── */}
+                {activeTab === "export" && templateReady && (
+                  <div ref={lrExportSectionRef} className="space-y-6">
+                    <div className="space-y-2">
+                      <FieldLabel>Export as</FieldLabel>
+                      <RadioGroup value={downloadMode} onValueChange={(v) => setDownloadMode(v as "single" | "individual")} className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2"><RadioGroupItem value="individual" id="lr-export-ind" /><Label htmlFor="lr-export-ind">Separate file</Label></div>
+                        <div className="flex items-center gap-2"><RadioGroupItem value="single" id="lr-export-single" /><Label htmlFor="lr-export-single">Single file (Combined)</Label></div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
+                      <FieldLabel>File Name</FieldLabel>
+                      <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                      {downloadMode === "individual" ? (
+                        <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type &quot;#&quot; to insert merge field.</p>
+                      ) : (
+                        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"><span className="font-semibold">Note:</span> Merge fields are not supported for &apos;Single File (Combined)&apos;</p>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <FieldLabel>Password Protection</FieldLabel>
+                        <Switch checked={passwordProtection} onCheckedChange={(v) => { setPasswordProtection(v); if (!v) { setPassword(""); setPwPopoverOpen(false); } }} aria-label="Password protection" />
+                      </div>
+                      {passwordProtection && (
+                        <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
+                          <PopoverAnchor asChild>
+                            <Input value={password} placeholder="Enter password" onChange={(e) => { const value = e.target.value; setPassword(value); const idx = value.lastIndexOf("#"); if (idx !== -1 && !value.slice(idx + 1).includes(" ")) { setPwQuery(value.slice(idx + 1).toLowerCase()); setPwPopoverOpen(true); } else { setPwPopoverOpen(false); } }} />
+                          </PopoverAnchor>
+                          <PopoverContent align="start" className="w-64 max-h-80 overflow-y-auto p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                            {(() => {
+                              const groups = mergeFieldGroups.map((g) => ({ ...g, fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)) })).filter((g) => g.fields.length > 0);
+                              if (groups.length === 0) return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
+                              return groups.map((g) => (
+                                <div key={g.module} className="py-1">
+                                  <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
+                                  {g.fields.map((f) => <button key={f} type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setPassword((prev) => { const idx = prev.lastIndexOf("#"); if (idx === -1) return prev; return `${prev.slice(0, idx)}#${f}#`; }); setPwPopoverOpen(false); }}>{f}</button>)}
+                                </div>
+                              ));
+                            })()}
+                            <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">Only Date, Email and Number type fields are allowed.</p>
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                      <div className="flex items-center gap-2"><Checkbox id="lr-set-default" checked={setDefault} onCheckedChange={(v) => setSetDefault(v === true)} /><Label htmlFor="lr-set-default">Set as default file format for the org</Label></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   // ── Unified tabbed detail-view panel ────────────────────────────────────────
   if (singleRecord) {
     const isDefaultPrintCat = category === "Default Print";
-    const isCanvasCat       = category === "Canvas Template";
-    const isMailMergeCat    = category === "Mail Merge Template";
-    const isEmailCat        = category === "Email Template";
+    const isCanvasCat       = category === "Canvas Templates";
+    const isMailMergeCat    = category === "Mail Merge Templates";
+    const isEmailCat        = category === "Email Templates";
 
     const srCategoryOptions = printCategoryOverride ?? printCategories;
 
