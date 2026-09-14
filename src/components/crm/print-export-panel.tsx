@@ -1,5 +1,5 @@
 "use client";
-
+// v1.1 — file settings box update
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, FileDown, Info, Printer, Search, ZoomIn, ZoomOut } from "lucide-react";
