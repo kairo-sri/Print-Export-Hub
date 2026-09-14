@@ -179,7 +179,7 @@ const templatesByCategory: Record<string, string[]> = {
 
 type Condition = { id: number; field: string; operator: string; value: string };
 
-function AttachRecordAsPDFDialog({ onCancel, onDone, className, module = "Leads", initialFileName }: { onCancel: () => void; onDone: (fileName: string) => void; className?: string; module?: string; initialFileName?: string }) {
+function AttachRecordAsPDFDialog({ onCancel, onDone, module = "Leads", initialFileName }: { onCancel: () => void; onDone: (fileName: string) => void; module?: string; initialFileName?: string }) {
   const [templateCategory, setTemplateCategory] = useState("");
   const [template, setTemplate] = useState("");
   const [layout, setLayout] = useState("portrait");
@@ -188,120 +188,99 @@ function AttachRecordAsPDFDialog({ onCancel, onDone, className, module = "Leads"
   const [fileName, setFileName] = useState(initialFileName ?? "");
   const [passwordEnabled, setPasswordEnabled] = useState(false);
   const [password, setPassword] = useState("");
-
   const categories = templateCategoriesByModule[module] ?? [];
   const templates = templateCategory ? (templatesByCategory[templateCategory] ?? []) : [];
+  const templateReady = !!(template || templateCategory === "Default Print");
 
   return (
-    <div className={cn("flex flex-col overflow-hidden bg-white", className)}>
-      {/* Heading */}
-      <div className="border-b border-gray-100 px-5 py-4">
-        <h2 className="text-base font-semibold text-gray-900">Attach Record as PDF</h2>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
-        {/* ── PDF Export Options ── */}
-        <div className="space-y-6">
-          <p className="text-sm font-semibold text-foreground">Export to PDF Options</p>
-
-          {/* Choose Category */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Choose Category</Label>
-            <Select value={templateCategory} onValueChange={(v) => { setTemplateCategory(v); setTemplate(""); }}>
-              <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-              <SelectContent className="z-[200]">
-                {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Template */}
-          {templateCategory && templateCategory !== "Default Print" && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Template</Label>
-              <Select value={template} onValueChange={setTemplate}>
-                <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
-                <SelectContent className="z-[200]">
-                  {templates.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Layout + Paper Size — shown once template selected */}
-          {(template || templateCategory === "Default Print") && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Layout</Label>
-                <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
-                  <div className="flex items-center gap-2"><RadioGroupItem value="portrait" id="pdf-layout-p" /><Label htmlFor="pdf-layout-p">Portrait</Label></div>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="landscape" id="pdf-layout-l" /><Label htmlFor="pdf-layout-l">Landscape</Label></div>
-                </RadioGroup>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Paper Size</Label>
-                <RadioGroup value={paperSize} onValueChange={setPaperSize} className="flex gap-6">
-                  <div className="flex items-center gap-2"><RadioGroupItem value="a4" id="pdf-paper-a4" /><Label htmlFor="pdf-paper-a4">A4</Label></div>
-                  <div className="flex items-center gap-2"><RadioGroupItem value="letter" id="pdf-paper-l" /><Label htmlFor="pdf-paper-l">US Letter</Label></div>
-                </RadioGroup>
-              </div>
-
-              {/* File Name */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">File Name</Label>
-                <MergeFieldInput value={fileName} onChange={setFileName} placeholder="Enter file name" mergeFields={fileNameMergeFields} />
-                <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type "#" to insert merge field.</p>
-              </div>
-
-              {/* Password Protection */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Password Protection</Label>
-                  <Switch
-                    checked={passwordEnabled}
-                    onCheckedChange={(v) => { setPasswordEnabled(v); if (!v) setPassword(""); }}
-                    aria-label="Password protection"
-                  />
-                </div>
-                {passwordEnabled && (
-                  <div className="space-y-1.5">
-                    <MergeFieldInput value={password} onChange={setPassword} placeholder="Enter password" mergeFields={passwordMergeFields} />
-                    <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type "#" to insert merge field.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Set as default */}
-              <div className="flex items-center gap-2 pt-1">
-                <Checkbox
-                  id="pdf-set-default"
-                  checked={setAsDefault}
-                  onCheckedChange={(v) => setSetAsDefault(!!v)}
-                />
-                <Label htmlFor="pdf-set-default" className="cursor-pointer text-sm font-normal">Set as default for the org</Label>
-              </div>
-            </>
-          )}
+    <div className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-white">
+      {/* Header */}
+      <div className="flex shrink-0 items-center gap-3 border-b border-crm-line bg-crm-surface px-6 py-3">
+        <h2 className="text-base font-semibold text-foreground">Attach Record as PDF</h2>
+        <div className="ml-auto flex items-center gap-2">
+          <button type="button" onClick={onCancel} className="rounded-md border border-gray-300 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button type="button" onClick={() => onDone(fileName)} className="rounded-md bg-crm-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-crm-accent/90">Done</button>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-md border border-gray-300 px-5 py-2 text-sm text-gray-600 hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={() => onDone(fileName)}
-          className="rounded-md bg-crm-accent px-5 py-2 text-sm font-medium text-white hover:bg-crm-accent/90"
-        >
-          Done
-        </button>
+      {/* Body */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
+          <div className="mx-auto max-w-lg space-y-6">
+            <p className="text-sm font-semibold text-foreground">Export to PDF Options</p>
+
+            {/* Choose Category */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Choose Category</Label>
+              <Select value={templateCategory} onValueChange={(v) => { setTemplateCategory(v); setTemplate(""); }}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent className="z-[200]">
+                  {categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Template */}
+            {templateCategory && templateCategory !== "Default Print" && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Template</Label>
+                <Select value={template} onValueChange={setTemplate}>
+                  <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
+                  <SelectContent className="z-[200]">
+                    {templates.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {templateReady && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Layout</Label>
+                  <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
+                    <div className="flex items-center gap-2"><RadioGroupItem value="portrait" id="pdf-layout-p" /><Label htmlFor="pdf-layout-p">Portrait</Label></div>
+                    <div className="flex items-center gap-2"><RadioGroupItem value="landscape" id="pdf-layout-l" /><Label htmlFor="pdf-layout-l">Landscape</Label></div>
+                  </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Paper Size</Label>
+                  <RadioGroup value={paperSize} onValueChange={setPaperSize} className="flex gap-6">
+                    <div className="flex items-center gap-2"><RadioGroupItem value="a4" id="pdf-paper-a4" /><Label htmlFor="pdf-paper-a4">A4</Label></div>
+                    <div className="flex items-center gap-2"><RadioGroupItem value="letter" id="pdf-paper-l" /><Label htmlFor="pdf-paper-l">US Letter</Label></div>
+                  </RadioGroup>
+                </div>
+
+                {/* File Name */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">File Name</Label>
+                  <MergeFieldInput value={fileName} onChange={setFileName} placeholder="Enter file name" mergeFields={fileNameMergeFields} />
+                  <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type "#" to insert merge field.</p>
+                </div>
+
+                {/* Password Protection */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Password Protection</Label>
+                    <Switch checked={passwordEnabled} onCheckedChange={(v) => { setPasswordEnabled(v); if (!v) setPassword(""); }} aria-label="Password protection" />
+                  </div>
+                  {passwordEnabled && (
+                    <div className="space-y-1.5">
+                      <MergeFieldInput value={password} onChange={setPassword} placeholder="Enter password" mergeFields={passwordMergeFields} />
+                      <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type "#" to insert merge field.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Set as default */}
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox id="pdf-set-default" checked={setAsDefault} onCheckedChange={(v) => setSetAsDefault(!!v)} />
+                  <Label htmlFor="pdf-set-default" className="cursor-pointer text-sm font-normal">Set as default for the org</Label>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -536,9 +515,8 @@ function AttachmentsPanel({ onClose, module }: { onClose: () => void; module?: s
     <>
       {showAttachAsPDF && (
         <>
-          <div className="fixed inset-0 z-[69] bg-black/30" onClick={() => { setShowAttachAsPDF(false); setEditingPdf(null); }} />
+          <div className="fixed inset-0 z-[69] bg-black/20" onClick={() => { setShowAttachAsPDF(false); setEditingPdf(null); }} />
           <AttachRecordAsPDFDialog
-            className="fixed right-0 top-0 z-[70] h-full w-80 border-l border-gray-200 shadow-2xl"
             onCancel={() => { setShowAttachAsPDF(false); setEditingPdf(null); }}
             onDone={handlePdfDone}
             module={module}

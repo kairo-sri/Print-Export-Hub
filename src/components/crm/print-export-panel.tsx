@@ -1028,7 +1028,7 @@ export function PrintExportPanel({
             </div>
 
             {/* Sidebar */}
-            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-80 lg:border-l lg:border-t-0">
+            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-96 lg:border-l lg:border-t-0">
               {/* Tab switcher */}
               <div className="flex shrink-0 border-b border-crm-line">
                 <button type="button" onClick={() => setActiveTab("print")} className={cn("flex-1 py-3 text-sm font-medium transition-colors", activeTab === "print" ? "border-b-2 border-crm-accent text-crm-accent" : "text-muted-foreground hover:text-foreground")}>
@@ -1179,9 +1179,9 @@ export function PrintExportPanel({
                   </div>
                 )}
 
-                {/* Shared: Layout + Paper Size (for template categories, non-canvas, non-list-view) */}
+                {/* Shared: File Settings box (for template categories, non-canvas, non-list-view) */}
                 {!isListViewCat && !isCanvasCat && template && (
-                  <div className="space-y-4">
+                  <div className="rounded-md border border-crm-line/60 p-4 space-y-4">
                     <div className="space-y-2">
                       <FieldLabel>Layout</FieldLabel>
                       <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
@@ -1196,6 +1196,53 @@ export function PrintExportPanel({
                         <div className="flex items-center gap-2"><RadioGroupItem value="letter" id="lr-paper-l" /><Label htmlFor="lr-paper-l">US Letter</Label></div>
                       </RadioGroup>
                     </div>
+                    {activeTab === "export" && (
+                      <>
+                        <div className="space-y-2">
+                          <FieldLabel>Export as</FieldLabel>
+                          <RadioGroup value={downloadMode} onValueChange={(v) => setDownloadMode(v as "single" | "individual")} className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2"><RadioGroupItem value="individual" id="lr-export-ind" /><Label htmlFor="lr-export-ind">Separate file</Label></div>
+                            <div className="flex items-center gap-2"><RadioGroupItem value="single" id="lr-export-single" /><Label htmlFor="lr-export-single">Single file (Combined)</Label></div>
+                          </RadioGroup>
+                        </div>
+                        <div className="space-y-2">
+                          <FieldLabel>File Name</FieldLabel>
+                          <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                          {downloadMode === "individual" ? (
+                            <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type &quot;#&quot; to insert merge field.</p>
+                          ) : (
+                            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"><span className="font-semibold">Note:</span> Merge fields are not supported for &apos;Single File (Combined)&apos;</p>
+                          )}
+                        </div>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <FieldLabel>Password Protection</FieldLabel>
+                            <Switch checked={passwordProtection} onCheckedChange={(v) => { setPasswordProtection(v); if (!v) { setPassword(""); setPwPopoverOpen(false); } }} aria-label="Password protection" />
+                          </div>
+                          {passwordProtection && (
+                            <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
+                              <PopoverAnchor asChild>
+                                <Input value={password} placeholder="Enter password" onChange={(e) => { const value = e.target.value; setPassword(value); const idx = value.lastIndexOf("#"); if (idx !== -1 && !value.slice(idx + 1).includes(" ")) { setPwQuery(value.slice(idx + 1).toLowerCase()); setPwPopoverOpen(true); } else { setPwPopoverOpen(false); } }} />
+                              </PopoverAnchor>
+                              <PopoverContent align="start" className="w-64 max-h-80 overflow-y-auto p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                                {(() => {
+                                  const groups = mergeFieldGroups.map((g) => ({ ...g, fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)) })).filter((g) => g.fields.length > 0);
+                                  if (groups.length === 0) return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
+                                  return groups.map((g) => (
+                                    <div key={g.module} className="py-1">
+                                      <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
+                                      {g.fields.map((f) => <button key={f} type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setPassword((prev) => { const idx = prev.lastIndexOf("#"); if (idx === -1) return prev; return `${prev.slice(0, idx)}#${f}#`; }); setPwPopoverOpen(false); }}>{f}</button>)}
+                                    </div>
+                                  ));
+                                })()}
+                                <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">Only Date, Email and Number type fields are allowed.</p>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                          <div className="flex items-center gap-2"><Checkbox id="lr-set-default" checked={setDefault} onCheckedChange={(v) => setSetDefault(v === true)} /><Label htmlFor="lr-set-default">Set as default file format for the org</Label></div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -1220,54 +1267,6 @@ export function PrintExportPanel({
                   </div>
                 )}
 
-                {/* ── Export tab specific ──────────────────────────── */}
-                {activeTab === "export" && templateReady && (
-                  <div ref={lrExportSectionRef} className="space-y-6">
-                    <div className="space-y-2">
-                      <FieldLabel>Export as</FieldLabel>
-                      <RadioGroup value={downloadMode} onValueChange={(v) => setDownloadMode(v as "single" | "individual")} className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2"><RadioGroupItem value="individual" id="lr-export-ind" /><Label htmlFor="lr-export-ind">Separate file</Label></div>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="single" id="lr-export-single" /><Label htmlFor="lr-export-single">Single file (Combined)</Label></div>
-                      </RadioGroup>
-                    </div>
-                    <div className="space-y-2">
-                      <FieldLabel>File Name</FieldLabel>
-                      <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
-                      {downloadMode === "individual" ? (
-                        <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">Type &quot;#&quot; to insert merge field.</p>
-                      ) : (
-                        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700"><span className="font-semibold">Note:</span> Merge fields are not supported for &apos;Single File (Combined)&apos;</p>
-                      )}
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <FieldLabel>Password Protection</FieldLabel>
-                        <Switch checked={passwordProtection} onCheckedChange={(v) => { setPasswordProtection(v); if (!v) { setPassword(""); setPwPopoverOpen(false); } }} aria-label="Password protection" />
-                      </div>
-                      {passwordProtection && (
-                        <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
-                          <PopoverAnchor asChild>
-                            <Input value={password} placeholder="Enter password" onChange={(e) => { const value = e.target.value; setPassword(value); const idx = value.lastIndexOf("#"); if (idx !== -1 && !value.slice(idx + 1).includes(" ")) { setPwQuery(value.slice(idx + 1).toLowerCase()); setPwPopoverOpen(true); } else { setPwPopoverOpen(false); } }} />
-                          </PopoverAnchor>
-                          <PopoverContent align="start" className="w-64 max-h-80 overflow-y-auto p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-                            {(() => {
-                              const groups = mergeFieldGroups.map((g) => ({ ...g, fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)) })).filter((g) => g.fields.length > 0);
-                              if (groups.length === 0) return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
-                              return groups.map((g) => (
-                                <div key={g.module} className="py-1">
-                                  <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
-                                  {g.fields.map((f) => <button key={f} type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => { setPassword((prev) => { const idx = prev.lastIndexOf("#"); if (idx === -1) return prev; return `${prev.slice(0, idx)}#${f}#`; }); setPwPopoverOpen(false); }}>{f}</button>)}
-                                </div>
-                              ));
-                            })()}
-                            <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">Only Date, Email and Number type fields are allowed.</p>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                      <div className="flex items-center gap-2"><Checkbox id="lr-set-default" checked={setDefault} onCheckedChange={(v) => setSetDefault(v === true)} /><Label htmlFor="lr-set-default">Set as default file format for the org</Label></div>
-                    </div>
-                  </div>
-                )}
               </div>
             </aside>
           </div>
@@ -1355,7 +1354,7 @@ export function PrintExportPanel({
             </div>
 
             {/* Sidebar */}
-            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-80 lg:border-l lg:border-t-0">
+            <aside className="flex w-full shrink-0 flex-col overflow-hidden border-t border-crm-line bg-crm-surface lg:w-96 lg:border-l lg:border-t-0">
 
               {/* Tab switcher — underline style, full-width */}
               <div className="flex shrink-0 border-b border-crm-line">
@@ -1420,9 +1419,9 @@ export function PrintExportPanel({
                 </div>
               )}
 
-              {/* ── Shared: Layout + Paper Size ─────────────────── */}
+              {/* ── Shared: File Settings box ────────────────────── */}
               {showOptions && !isCanvasCat && (
-                <div className="space-y-4">
+                <div className="rounded-md border border-crm-line/60 p-4 space-y-4">
                   <div className="space-y-2">
                     <FieldLabel>Layout</FieldLabel>
                     <RadioGroup value={layout} onValueChange={setLayout} className="flex gap-6">
@@ -1449,6 +1448,101 @@ export function PrintExportPanel({
                       </div>
                     </RadioGroup>
                   </div>
+                  {activeTab === "export" && (
+                    <>
+                      <div className="space-y-2">
+                        <FieldLabel>File Name</FieldLabel>
+                        <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                        <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
+                          Type &quot;#&quot; to insert merge field.
+                        </p>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <FieldLabel>Password Protection</FieldLabel>
+                          <Switch
+                            checked={passwordProtection}
+                            onCheckedChange={(v) => {
+                              setPasswordProtection(v);
+                              if (!v) { setPassword(""); setPwPopoverOpen(false); }
+                            }}
+                            aria-label="Password protection"
+                          />
+                        </div>
+                        {passwordProtection && (
+                          <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
+                            <PopoverAnchor asChild>
+                              <Input
+                                value={password}
+                                placeholder="Enter password"
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setPassword(value);
+                                  const idx = value.lastIndexOf("#");
+                                  if (idx !== -1 && !value.slice(idx + 1).includes(" ")) {
+                                    setPwQuery(value.slice(idx + 1).toLowerCase());
+                                    setPwPopoverOpen(true);
+                                  } else {
+                                    setPwPopoverOpen(false);
+                                  }
+                                }}
+                              />
+                            </PopoverAnchor>
+                            <PopoverContent
+                              align="start"
+                              className="w-64 max-h-80 overflow-y-auto p-0"
+                              onOpenAutoFocus={(e) => e.preventDefault()}
+                            >
+                              {(() => {
+                                const groups = mergeFieldGroups
+                                  .map((g) => ({
+                                    ...g,
+                                    fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)),
+                                  }))
+                                  .filter((g) => g.fields.length > 0);
+                                if (groups.length === 0) {
+                                  return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
+                                }
+                                return groups.map((g) => (
+                                  <div key={g.module} className="py-1">
+                                    <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
+                                    {g.fields.map((f) => (
+                                      <button
+                                        key={f}
+                                        type="button"
+                                        className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                        onClick={() => {
+                                          setPassword((prev) => {
+                                            const idx = prev.lastIndexOf("#");
+                                            if (idx === -1) return prev;
+                                            return `${prev.slice(0, idx)}#${f}#`;
+                                          });
+                                          setPwPopoverOpen(false);
+                                        }}
+                                      >
+                                        {f}
+                                      </button>
+                                    ))}
+                                  </div>
+                                ));
+                              })()}
+                              <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">
+                                Only Date, Email and Number type fields are allowed.
+                              </p>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="sr-set-default"
+                            checked={setDefault}
+                            onCheckedChange={(v) => setSetDefault(v === true)}
+                          />
+                          <Label htmlFor="sr-set-default">Set as default file format for the org</Label>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -1490,102 +1584,6 @@ export function PrintExportPanel({
                 </div>
               )}
 
-              {/* ── Export tab: File Name + Password ────────────── */}
-              {showOptions && !isCanvasCat && activeTab === "export" && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <FieldLabel>File Name</FieldLabel>
-                    <Input value={fileName} onChange={(e) => setFileName(e.target.value)} />
-                    <p className="rounded-md bg-crm-canvas px-3 py-2 text-xs text-muted-foreground">
-                      Type &quot;#&quot; to insert merge field.
-                    </p>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <FieldLabel>Password Protection</FieldLabel>
-                      <Switch
-                        checked={passwordProtection}
-                        onCheckedChange={(v) => {
-                          setPasswordProtection(v);
-                          if (!v) { setPassword(""); setPwPopoverOpen(false); }
-                        }}
-                        aria-label="Password protection"
-                      />
-                    </div>
-                    {passwordProtection && (
-                      <Popover open={pwPopoverOpen} onOpenChange={setPwPopoverOpen}>
-                        <PopoverAnchor asChild>
-                          <Input
-                            value={password}
-                            placeholder="Enter password"
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setPassword(value);
-                              const idx = value.lastIndexOf("#");
-                              if (idx !== -1 && !value.slice(idx + 1).includes(" ")) {
-                                setPwQuery(value.slice(idx + 1).toLowerCase());
-                                setPwPopoverOpen(true);
-                              } else {
-                                setPwPopoverOpen(false);
-                              }
-                            }}
-                          />
-                        </PopoverAnchor>
-                        <PopoverContent
-                          align="start"
-                          className="w-64 max-h-80 overflow-y-auto p-0"
-                          onOpenAutoFocus={(e) => e.preventDefault()}
-                        >
-                          {(() => {
-                            const groups = mergeFieldGroups
-                              .map((g) => ({
-                                ...g,
-                                fields: g.fields.filter((f) => f.toLowerCase().includes(pwQuery)),
-                              }))
-                              .filter((g) => g.fields.length > 0);
-                            if (groups.length === 0) {
-                              return <p className="px-3 py-2 text-sm text-muted-foreground">No matching fields</p>;
-                            }
-                            return groups.map((g) => (
-                              <div key={g.module} className="py-1">
-                                <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground">{g.module}</p>
-                                {g.fields.map((f) => (
-                                  <button
-                                    key={f}
-                                    type="button"
-                                    className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                                    onClick={() => {
-                                      setPassword((prev) => {
-                                        const idx = prev.lastIndexOf("#");
-                                        if (idx === -1) return prev;
-                                        return `${prev.slice(0, idx)}#${f}#`;
-                                      });
-                                      setPwPopoverOpen(false);
-                                    }}
-                                  >
-                                    {f}
-                                  </button>
-                                ))}
-                              </div>
-                            ));
-                          })()}
-                          <p className="sticky bottom-0 border-t bg-popover px-3 py-2 text-xs text-muted-foreground">
-                            Only Date, Email and Number type fields are allowed.
-                          </p>
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="sr-set-default"
-                        checked={setDefault}
-                        onCheckedChange={(v) => setSetDefault(v === true)}
-                      />
-                      <Label htmlFor="sr-set-default">Set as default file format for the org</Label>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* ── Canvas-specific options (both tabs) ─────────── */}
               {isCanvasCat && template && (
